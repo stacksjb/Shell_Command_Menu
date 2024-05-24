@@ -1,5 +1,5 @@
 # CLI_Menu
-A simple Rust App to run config options from CLI
+A simple Rust App to run stored shell commands in a config via a menu with options from config json
 
 This is a simple app I used ChatGPT to write to help learn Rust and also to give me a framework for my daily CLI workflow.
 
