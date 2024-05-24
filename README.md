@@ -7,4 +7,6 @@ This is a simple app I used ChatGPT to write to help learn Rust and also to give
 *Most of the credit goes to ChatGPT which wrote most of the code. Thanks to @Scott Pack for his talk at BSides 2023 (https://www.youtube.com/watch?v=b_pkz4kDfq0) which helped set the stage
 
 
-Sound Effect credit https://pixabay.com/sound-effects/whoosh-6316/
+Sound Effects credit Pixabay
+https://pixabay.com/sound-effects/whoosh-6316/
+https://pixabay.com/sound-effects/message-incoming-132126/
