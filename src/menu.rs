@@ -1,73 +1,74 @@
-use crate::edit::edit_json_menu;
-use crate::utils::run_command;
-use termion::input::TermRead;
-use termion::raw::IntoRawMode;
+use crate::edit::{edit_json_menu, reset_strikeout_state};
+use crate::utils::{run_command, play_sound};
+use inquire::Select;
 use std::process::exit;
-use std::io::Write; // Import std::io::Write
+use term_size;
 
-pub fn display_menu(config_path: &str) {
+#[tokio::main]
+pub async fn display_menu(config_path: &str) {
     let config = crate::config::load_config(config_path);
+    let mut selected_commands: Vec<usize> = vec![];
+    let mut last_selected: Option<usize> = None;
 
-    let mut last_choice: Option<usize> = None;
-    // Clear the screen before printing the menu
-    print!("{}[2J", 27 as char);
-    println!("Welcome to the JSON Command Shortcut Menu!");
+    // Helper function to apply strike-through effect
+    fn strike_through(text: &str) -> String {
+        text.chars().map(|c| format!("{}\u{0336}", c)).collect()
+    }
+
     loop {
-        println!("Menu:");
-        for option in &config.commands {
-            println!("{}. {}", option.number, option.display_name);
-        }
-        println!("q. Exit");
+        // Determine the terminal height and set the page size accordingly
+        let page_size = if let Some((_, height)) = term_size::dimensions() {
+            height as usize - 2 // Leave some space for the prompt
+        } else {
+            10 // Fallback page size
+        };
 
-        print!("Please enter your choice: ");
-        std::io::stdout().flush().unwrap();
-
-        let stdin = std::io::stdin();
-        let _stdout = std::io::stdout().into_raw_mode().unwrap();
-        let choice = stdin.keys().next().unwrap().unwrap();
-
-        match choice {
-            termion::event::Key::Char('q') | termion::event::Key::Esc => {
-                drop(_stdout); // Ensure the terminal is restored before printing the exit message
-                println!("Exiting...");
-                exit(0);
+        // Create a list of menu options
+        let mut menu_options: Vec<String> = config.commands.iter().map(|cmd| {
+            if selected_commands.contains(&cmd.number) {
+                format!("{}. {}", cmd.number, strike_through(&cmd.display_name))
+            } else {
+                format!("{}. {}", cmd.number, cmd.display_name)
             }
-            termion::event::Key::Ctrl('e') => {
-                drop(_stdout); // Ensure the terminal is restored before switching menus
-                edit_json_menu(config_path);
-            }
-            termion::event::Key::Char(c) if c.is_digit(10) => {
-                let num = c.to_digit(10).unwrap() as usize;
-                if num > 0 && num <= config.commands.len() {
-                    last_choice = Some(num);
-                    let command = &config.commands[num - 1].command;
-                    drop(_stdout); // Ensure the terminal is restored before running the command
-                    run_command(command);
+        }).collect();
+
+        menu_options.push("e. Edit commands".to_string());
+        menu_options.push("q. Exit".to_string());
+
+        // Display the menu and prompt the user to select an option
+        let menu_prompt = if let Some(last) = last_selected {
+            Select::new("Welcome to the JSON Command Shortcut Menu! Select an option:", menu_options)
+                .with_starting_cursor(last)
+                .with_page_size(page_size)
+        } else {
+            Select::new("Welcome to the JSON Command Shortcut Menu! Select an option:", menu_options)
+                .with_page_size(page_size)
+        };
+
+        match menu_prompt.prompt() {
+            Ok(choice) => {
+                if choice == "q. Exit" {
+                    println!("Exiting...");
+                    exit(0);
+                } else if choice == "e. Edit commands" {
+                    edit_json_menu(config_path);
+                    // Reset strike-out state after editing
+                    reset_strikeout_state(&mut selected_commands, &mut last_selected);
                 } else {
-                    drop(_stdout); // Ensure the terminal is restored before printing the invalid choice message
-                    println!("Invalid choice, please try again.");
-                }
-            }
-            termion::event::Key::Char('\n') => {
-                if let Some(last) = last_choice {
-                    if last <= config.commands.len() {
-                        let command = &config.commands[last - 1].command;
-                        drop(_stdout); // Ensure the terminal is restored before running the command
-                        println!("Re-running last command: {}", command);
-                        run_command(command);
+                    let num: usize = choice.split('.').next().unwrap().parse().unwrap();
+                    if let Some(command) = config.commands.iter().find(|cmd| cmd.number == num) {
+                        tokio::spawn(play_sound("whoosh-6316.mp3"));
+                        run_command(&command.command);
+                        if !selected_commands.contains(&num) {
+                            selected_commands.push(num);
+                        }
+                        last_selected = Some(config.commands.iter().position(|cmd| cmd.number == num).unwrap());
                     } else {
-                        drop(_stdout); // Ensure the terminal is restored before printing the invalid last choice message
-                        println!("Invalid last choice.");
+                        println!("Invalid choice, please try again.");
                     }
-                } else {
-                    drop(_stdout); // Ensure the terminal is restored before printing the no previous choice message
-                    println!("No previous choice. Please make a selection.");
                 }
             }
-            _ => {
-                drop(_stdout); // Ensure the terminal is restored before printing the invalid choice message
-                println!("Invalid choice, please try again.");
-            }
+            Err(_) => println!("Error reading input. Please try again."),
         }
     }
 }

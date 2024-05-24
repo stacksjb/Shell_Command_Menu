@@ -1,7 +1,7 @@
 mod config;
 mod edit;
-mod menu;
 mod utils;
+mod menu;
 
 fn main() {
     let config_path = "commands.json";
@@ -9,5 +9,6 @@ fn main() {
         config::create_default_config(config_path);
     }
 
+    // Display the menu
     menu::display_menu(config_path);
 }

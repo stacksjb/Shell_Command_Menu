@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct CommandOption {
     pub number: usize,
     pub display_name: String,
     pub command: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Config {
     pub commands: Vec<CommandOption>,
 }
@@ -23,24 +23,20 @@ pub fn save_config(path: &str, config: &Config) {
     std::io::Write::write_all(&mut file, config_data.as_bytes()).expect("Unable to write to config file");
     println!("Config saved.");
 }
-//Function to create config if it doesn't exist
+
 pub fn create_default_config(path: &str) {
     let default_commands = vec![
         CommandOption {
             number: 1,
-            display_name: "Default Option 1".to_string(),
-            command: "echo 'Default command 1'".to_string(),
+            display_name: "Clear 📥 Inbox".to_string(),
+            command: "tod list process -f '@Morn & (due today | overdue | no due date)'".to_string(),
         },
         CommandOption {
             number: 2,
-            display_name: "Default Option 2".to_string(),
-            command: "echo 'Default command 2'".to_string(),
+            display_name: "📆 Daily & Weekly Review".to_string(),
+            command: "tod list process -f '#GTD Weekly Review 📆 & (overdue | due today | no due date) & !@EOD or #Daily Review 📆 & (overdue | due today | no due date)  & !@EOD'".to_string(),
         },
-        CommandOption {
-            number: 3,
-            display_name: "Default Option 3".to_string(),
-            command: "echo 'Default command 3'".to_string(),
-        },
+        // Add more commands as needed...
     ];
 
     let default_config = Config {
