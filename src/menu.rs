@@ -37,11 +37,11 @@ pub async fn display_menu(config_path: &str) {
 
         // Display the menu and prompt the user to select an option
         let menu_prompt = if let Some(last) = last_selected {
-            Select::new("Welcome to the JSON Command Shortcut Menu! Select an option:", menu_options)
+            Select::new("Welcome to the CLI Command Shortcut Menu! Select an option:", menu_options)
                 .with_starting_cursor(last)
                 .with_page_size(page_size)
         } else {
-            Select::new("Welcome to the JSON Command Shortcut Menu! Select an option:", menu_options)
+            Select::new("Welcome to the CLI Command Shortcut Menu! Select an option:", menu_options)
                 .with_page_size(page_size)
         };
 
