@@ -37,6 +37,7 @@ pub fn edit_menu(config_path: &str) {
             "a. ADD a new command",
             "e. EDIT a command",
             "d. DELETE a command",
+            "D. DELETE all commands",
             "q. Return to Main Menu",
         ];
 
@@ -49,6 +50,7 @@ pub fn edit_menu(config_path: &str) {
             "a. ADD a new command" => add_command(&mut config, &mut changes_made),
             "e. EDIT a command" => edit_command(&mut config, &mut changes_made),
             "d. DELETE a command" => delete_command(&mut config, &mut changes_made),
+            "D. DELETE all commands" => delete_all_commands(&mut config, &mut changes_made),
             "q. Return to Main Menu" => {
                 if changes_made {
                     let save_prompt = Select::new("Save changes?", vec!["Yes", "No"])
@@ -136,6 +138,11 @@ fn delete_command(config: &mut Commands, changes_made: &mut bool) {
         .expect("Selected command not found");
     // Remove the command
     config.commands.remove(index);
+    *changes_made = true;
+}
+
+fn delete_all_commands(config: &mut Commands, changes_made: &mut bool) {
+    config.commands.clear();
     *changes_made = true;
 }
 
