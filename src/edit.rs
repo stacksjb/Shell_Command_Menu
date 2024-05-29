@@ -1,4 +1,4 @@
-use crate::config::{save_config, CommandOption, Commands};
+use crate::config::{create_default_config, save_config, CommandOption, Commands};
 use crate::utils::prompt;
 use inquire::Select;
 use prettytable::row; //Use prettytable::row to print table of commands
@@ -6,7 +6,8 @@ use prettytable::{Cell, Row, Table};
 use textwrap::fill; // Import textwrap for wrapping text
 
 pub fn edit_menu(config_path: &str) {
-    let mut config = crate::config::load_config(config_path);
+    let mut config = crate::config::load_config(config_path)
+        .unwrap_or_else(|_e| create_default_config(config_path));
     let _original_config = config.clone();
     let mut changes_made = false;
 

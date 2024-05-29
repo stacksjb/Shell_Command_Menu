@@ -8,7 +8,13 @@ pub async fn display_menu(config_path: &str) {
     let mut selected_commands: Vec<usize> = vec![];
     let mut last_selected: Option<usize> = None;
     loop {
-        let config = crate::config::load_config(config_path);
+        let Ok(config) = crate::config::load_config(config_path) else {
+            println!("Config does not exist or is invalid; editing new config");
+            edit_menu(config_path);
+            selected_commands.clear();
+            last_selected = None;
+            continue;
+        };
 
         // Determine the terminal height and set the page size accordingly
         let page_size = get_page_size();
