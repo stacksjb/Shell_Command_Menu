@@ -1,18 +1,18 @@
-use crate::config::{Config, CommandOption, save_config};
+use crate::config::{save_config, CommandOption, Config};
 use crate::utils::prompt;
+use inquire::Select;
 use prettytable::{Table, Row, Cell};
-use prettytable::row; // Import the row macro
-use termion::input::TermRead;
-use std::io::Write; // Import std::io::Write
+use prettytable::row; //Use prettytable::row to print table of commands
 use textwrap::fill; // Import textwrap for wrapping text
 
-pub fn edit_json_menu(config_path: &str) {
+pub fn edit_menu(config_path: &str) {
     let mut config = crate::config::load_config(config_path);
     let _original_config = config.clone();
     let mut changes_made = false;
 
     // Get the terminal width to wrap text accordingly
-    let terminal_width = termion::terminal_size().map(|(w, _)| w as usize).unwrap_or(80);
+    let terminal_width = termion::terminal_size().unwrap().0 as usize;
+
 
     loop {
         // Create a table to display the commands
@@ -31,69 +31,52 @@ pub fn edit_json_menu(config_path: &str) {
         println!("Current commands:");
         table.printstd();
 
-        // Prompt for input
-        println!("Enter 'a' to add a new command, a number to edit a command, 'd' to delete a command, or 'q' to return to the main menu.");
-        print!("Your choice: ");
-        std::io::stdout().flush().unwrap(); // Ensure std::io::Write is imported
+        // Provide the options to add, edit, delete, or return to main menu
 
-        let stdin = std::io::stdin();
-        let choice = stdin.keys().next().unwrap().unwrap();
+        let menu_options = vec![
+            "a. ADD a new command",
+            "e. EDIT a command",
+            "d. DELETE a command",
+            "q. Return to Main Menu",
+        ];
 
-        match choice {
-            termion::event::Key::Char('a') => {
-                add_command(&mut config);
-                changes_made = true;
-            }
-            termion::event::Key::Char(c) if c.is_digit(10) => {
-                let num = c.to_digit(10).unwrap() as usize;
-                if num > 0 && num <= config.commands.len() {
-                    edit_command(&mut config, num - 1);
-                    changes_made = true;
-                } else {
-                    println!("Invalid choice, please try again.");
-                }
-            }
-            termion::event::Key::Char('d') => {
-                println!("Enter the number of the command to delete: ");
-                std::io::stdout().flush().unwrap(); // Ensure std::io::Write is imported
-                let stdin = std::io::stdin(); // Create a new instance of stdin
-                let del_choice = stdin.keys().next().unwrap().unwrap();
-                if let termion::event::Key::Char(c) = del_choice {
-                    let num = c.to_digit(10).unwrap_or(0) as usize;
-                    if num > 0 && num <= config.commands.len() {
-                        delete_command(&mut config, num - 1);
-                        changes_made = true;
+        // Display the menu and prompt the user to select an option
+        let menu_prompt = Select::new("Select an option: ", menu_options)
+            .prompt()
+            .expect("Failed to display menu");
+        // Parse the selected option
+        match menu_prompt {
+            "a. ADD a new command" => add_command(&mut config, &mut changes_made),
+            "e. EDIT a command" => edit_command(&mut config,  &mut changes_made),
+            "d. DELETE a command" => delete_command(&mut config, &mut changes_made),
+            "q. Return to Main Menu" => {
+                if changes_made {
+                    let save_prompt = Select::new("Save changes?", vec!["Yes", "No"])
+                        .prompt()
+                        .expect("Failed to display menu");
+                    if save_prompt == "Yes" {
+                        if validate_json(&config) {
+                            save_config(config_path, &config);
+                            println!("Changes saved.");
+                        } else {
+                            println!("Error: Invalid JSON format. Changes not saved.");
+                        }
                     } else {
-                        println!("Invalid number, please try again.");
+                        println!("Changes not saved.");
                     }
                 }
-            }
-            termion::event::Key::Char('q') | termion::event::Key::Esc => {
                 break;
             }
-            _ => {
-                println!("Invalid choice, please try again.");
-            }
+            _ => println!("Invalid choice, please try again."),
         }
     }
-
-    if changes_made {
-        // Ask if the user wants to save changes
-        let save_changes = prompt("Do you want to save changes? (y/n): ");
-        if save_changes.trim().to_lowercase() == "y" {
-            if validate_json(&config) {
-                save_config(config_path, &config);
-                println!("Changes saved successfully.");
-            } else {
-                println!("Invalid configuration. Changes not saved.");
-            }
-        } else {
-            println!("Changes discarded.");
-        }
+        
     }
-}
 
-fn add_command(config: &mut Config) {
+
+
+
+fn add_command(config: &mut Config, changes_made: &mut bool) {
     let new_number = config.commands.len() + 1;
     let display_name = prompt("Enter display name: ");
     let command = prompt("Enter command: ");
@@ -103,37 +86,59 @@ fn add_command(config: &mut Config) {
         display_name,
         command,
     });
+    *changes_made = true;
 }
 
-fn edit_command(config: &mut Config, index: usize) {
-    let current_display_name = &config.commands[index].display_name;
-    let current_command = &config.commands[index].command;
 
-    let display_name = prompt(&format!("Enter new display name (current: {}): ", current_display_name));
-    let command = prompt(&format!("Enter new command (current: {}): ", current_command));
+fn edit_command(config: &mut Config, changes_made: &mut bool) {
+    let menu_options: Vec<String> = config.commands.iter().map(|c| c.display_name.clone()).collect();
+    
+    let selected_command = Select::new("Select a command to edit:", menu_options)
+        .prompt()
+        .expect("Failed to display menu");
 
-    if !display_name.trim().is_empty() {
-        config.commands[index].display_name = display_name;
+    // Find the index of the selected command
+    let index = config.commands.iter().position(|c| c.display_name == selected_command)
+        .expect("Selected command not found");
+
+    // Proceed to edit the command
+    let command = &mut config.commands[index];
+    println!("Editing command: {}", command.display_name);
+    println!("Current command: {}", command.command);
+
+    let new_display_name = prompt("Enter new display name (leave empty to keep current): ");
+    if !new_display_name.is_empty() {
+        command.display_name = new_display_name;
+        *changes_made = true;
     }
-    if !command.trim().is_empty() {
-        config.commands[index].command = command;
+
+    let new_command = prompt("Enter new command (leave empty to keep current): ");
+    if !new_command.is_empty() {
+        command.command = new_command;
+       *changes_made = true;
     }
 }
 
-fn delete_command(config: &mut Config, index: usize) {
+
+
+fn delete_command(config: &mut Config, changes_made: &mut bool) {
+    let menu_options: Vec<String> = config.commands.iter().map(|c| c.display_name.clone()).collect();
+    let selected_command = Select::new("Select a command to delete:", menu_options)
+        .prompt()
+        .expect("Failed to display menu");
+    // Find the index of the selected command
+    let index = config.commands.iter().position(|c| c.display_name == selected_command)
+        .expect("Selected command not found");
+    // Remove the command
     config.commands.remove(index);
     // Re-number the remaining commands
     for (i, command) in config.commands.iter_mut().enumerate() {
         command.number = i + 1;
     }
+    *changes_made = true;
 }
 
 fn validate_json(config: &Config) -> bool {
     // Convert the config to a JSON string and check for errors
     serde_json::to_string(&config).is_ok()
-}
-
-pub fn reset_strikeout_state(selected_commands: &mut Vec<usize>, last_selected: &mut Option<usize>) {
-    selected_commands.clear();
-    *last_selected = None;
 }

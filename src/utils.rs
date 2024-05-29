@@ -4,6 +4,7 @@ use rodio::{Decoder, OutputStream, Sink};
 use std::fs::File;
 use std::io::BufReader;
 use tokio::task;
+use crate::config::Config;
 
 pub fn run_command(command: &str) {
     println!("Running command: {}", command);
@@ -51,4 +52,31 @@ pub async fn play_sound(file_path: &str) {
             println!("Failed to initialize audio output stream");
         }
     }).await.unwrap();
+}
+
+pub fn generate_menu(
+    config: &Config,
+    selected_commands: &[usize]
+) -> Vec<String> {
+    let menu_options: Vec<String> = config.commands.iter().map(|cmd| {
+        if selected_commands.contains(&cmd.number) {
+            format!("{}. {}", cmd.number, strike_through(&cmd.display_name))
+        } else {
+            format!("{}. {}", cmd.number, cmd.display_name)
+        }
+    }).collect();
+    menu_options
+}
+
+fn strike_through(text: &str) -> String {
+    text.chars().map(|c| format!("{}\u{0336}", c)).collect()
+}
+
+
+pub fn get_page_size() -> usize {
+    if let Some((_, height)) = term_size::dimensions() {
+        height as usize - 2 // Leave some space for the prompt
+    } else {
+        10 // Fallback page size
+    }
 }
