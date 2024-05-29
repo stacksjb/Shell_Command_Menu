@@ -1,7 +1,8 @@
-# CLI_Menu
-A simple Rust App to run stored shell commands in a config via a menu with options from config json
+# Shell_Command_Menu (aka CLI_Menu)
 
-This is a simple app I used ChatGPT to write to help learn Rust and also to give me a framework for my daily CLI workflow.
+A simple Rust App to run stored shell commands from a config (Commands.json) file via a menu with options. 
+
+This is a simple app I used ChatGPT to write to help learn Rust and also to give me a framework for my daily CLI workflow. It tracks completion of each command and 
 
 This is still a big WIP and mostly an app I use personally, but I'd love to flush it out as it certainly could be useful for multiple use cases.
 
