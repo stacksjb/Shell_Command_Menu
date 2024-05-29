@@ -28,3 +28,4 @@ Cargo.lock
 .DS_Store
 #Config Files and JSON
 *.json
+*.bundle
