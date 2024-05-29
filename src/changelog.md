@@ -2,7 +2,7 @@
 
 
 ##Unreleased/WIP
--Rewrite/fix JSON to use single array instead of Command # Index
+-Rewrite/fix JSON to use single array instead of Command # Index (example in commands1.json)
 
 5.28.24
 https://github.com/stacksjb/CLI_Shell_Command_Menu/commit/428599c33755c0028791529587540d6a8d97de09
