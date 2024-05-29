@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct CommandOption {
-    pub number: usize,
     pub display_name: String,
     pub command: String,
 }
@@ -20,19 +19,18 @@ pub fn load_config(path: &str) -> Config {
 pub fn save_config(path: &str, config: &Config) {
     let config_data = serde_json::to_string_pretty(config).expect("Failed to serialize config");
     let mut file = std::fs::File::create(path).expect("Unable to create config file");
-    std::io::Write::write_all(&mut file, config_data.as_bytes()).expect("Unable to write to config file");
+    std::io::Write::write_all(&mut file, config_data.as_bytes())
+        .expect("Unable to write to config file");
     println!("Config saved.");
 }
 
 pub fn create_default_config(path: &str) {
     let default_commands = vec![
         CommandOption {
-            number: 1,
             display_name: "Command 1".to_string(),
             command: "echo '1'".to_string(),
         },
         CommandOption {
-            number: 2,
             display_name: "Command 2".to_string(),
             command: "echo 'com 2'".to_string(),
         },

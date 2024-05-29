@@ -1,10 +1,10 @@
-use std::io::{self, Write};
-use std::process::Command;
+use crate::config::Config;
 use rodio::{Decoder, OutputStream, Sink};
 use std::fs::File;
 use std::io::BufReader;
+use std::io::{self, Write};
+use std::process::Command;
 use tokio::task;
-use crate::config::Config;
 
 pub fn run_command(command: &str) {
     println!("Running command: {}", command);
@@ -29,7 +29,9 @@ pub fn prompt(message: &str) -> String {
     io::stdout().flush().unwrap();
 
     let mut input = String::new();
-    io::stdin().read_line(&mut input).expect("Failed to read line");
+    io::stdin()
+        .read_line(&mut input)
+        .expect("Failed to read line");
     input.trim().to_string()
 }
 
@@ -51,27 +53,31 @@ pub async fn play_sound(file_path: &str) {
         } else {
             println!("Failed to initialize audio output stream");
         }
-    }).await.unwrap();
+    })
+    .await
+    .unwrap();
 }
 
-pub fn generate_menu(
-    config: &Config,
-    selected_commands: &[usize]
-) -> Vec<String> {
-    let menu_options: Vec<String> = config.commands.iter().map(|cmd| {
-        if selected_commands.contains(&cmd.number) {
-            format!("{}. {}", cmd.number, strike_through(&cmd.display_name))
-        } else {
-            format!("{}. {}", cmd.number, cmd.display_name)
-        }
-    }).collect();
+pub fn generate_menu(config: &Config, selected_commands: &[usize]) -> Vec<String> {
+    let menu_options: Vec<String> = config
+        .commands
+        .iter()
+        .enumerate()
+        .map(|(index, cmd)| {
+            let number = index + 1;
+            if selected_commands.contains(&number) {
+                format!("{}. {}", number, strike_through(&cmd.display_name))
+            } else {
+                format!("{}. {}", number, cmd.display_name)
+            }
+        })
+        .collect();
     menu_options
 }
 
 fn strike_through(text: &str) -> String {
     text.chars().map(|c| format!("{}\u{0336}", c)).collect()
 }
-
 
 pub fn get_page_size() -> usize {
     if let Some((_, height)) = term_size::dimensions() {

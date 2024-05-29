@@ -1,8 +1,8 @@
 use crate::config::{save_config, CommandOption, Config};
 use crate::utils::prompt;
 use inquire::Select;
-use prettytable::{Table, Row, Cell};
 use prettytable::row; //Use prettytable::row to print table of commands
+use prettytable::{Cell, Row, Table};
 use textwrap::fill; // Import textwrap for wrapping text
 
 pub fn edit_menu(config_path: &str) {
@@ -13,15 +13,14 @@ pub fn edit_menu(config_path: &str) {
     // Get the terminal width to wrap text accordingly
     let terminal_width = termion::terminal_size().unwrap().0 as usize;
 
-
     loop {
         // Create a table to display the commands
         let mut table = Table::new();
         table.add_row(row!["Number", "Display Name", "Command"]);
 
-        for option in &config.commands {
+        for (i, option) in config.commands.iter().enumerate() {
             table.add_row(Row::new(vec![
-                Cell::new(&option.number.to_string()),
+                Cell::new(&(i + 1).to_string()),
                 Cell::new(&fill(&option.display_name, terminal_width / 3)),
                 Cell::new(&fill(&option.command, terminal_width / 3 * 2)),
             ]));
@@ -47,7 +46,7 @@ pub fn edit_menu(config_path: &str) {
         // Parse the selected option
         match menu_prompt {
             "a. ADD a new command" => add_command(&mut config, &mut changes_made),
-            "e. EDIT a command" => edit_command(&mut config,  &mut changes_made),
+            "e. EDIT a command" => edit_command(&mut config, &mut changes_made),
             "d. DELETE a command" => delete_command(&mut config, &mut changes_made),
             "q. Return to Main Menu" => {
                 if changes_made {
@@ -70,35 +69,35 @@ pub fn edit_menu(config_path: &str) {
             _ => println!("Invalid choice, please try again."),
         }
     }
-        
-    }
-
-
-
+}
 
 fn add_command(config: &mut Config, changes_made: &mut bool) {
-    let new_number = config.commands.len() + 1;
     let display_name = prompt("Enter display name: ");
     let command = prompt("Enter command: ");
 
     config.commands.push(CommandOption {
-        number: new_number,
         display_name,
         command,
     });
     *changes_made = true;
 }
 
-
 fn edit_command(config: &mut Config, changes_made: &mut bool) {
-    let menu_options: Vec<String> = config.commands.iter().map(|c| c.display_name.clone()).collect();
-    
+    let menu_options: Vec<String> = config
+        .commands
+        .iter()
+        .map(|c| c.display_name.clone())
+        .collect();
+
     let selected_command = Select::new("Select a command to edit:", menu_options)
         .prompt()
         .expect("Failed to display menu");
 
     // Find the index of the selected command
-    let index = config.commands.iter().position(|c| c.display_name == selected_command)
+    let index = config
+        .commands
+        .iter()
+        .position(|c| c.display_name == selected_command)
         .expect("Selected command not found");
 
     // Proceed to edit the command
@@ -115,26 +114,27 @@ fn edit_command(config: &mut Config, changes_made: &mut bool) {
     let new_command = prompt("Enter new command (leave empty to keep current): ");
     if !new_command.is_empty() {
         command.command = new_command;
-       *changes_made = true;
+        *changes_made = true;
     }
 }
 
-
-
 fn delete_command(config: &mut Config, changes_made: &mut bool) {
-    let menu_options: Vec<String> = config.commands.iter().map(|c| c.display_name.clone()).collect();
+    let menu_options: Vec<String> = config
+        .commands
+        .iter()
+        .map(|c| c.display_name.clone())
+        .collect();
     let selected_command = Select::new("Select a command to delete:", menu_options)
         .prompt()
         .expect("Failed to display menu");
     // Find the index of the selected command
-    let index = config.commands.iter().position(|c| c.display_name == selected_command)
+    let index = config
+        .commands
+        .iter()
+        .position(|c| c.display_name == selected_command)
         .expect("Selected command not found");
     // Remove the command
     config.commands.remove(index);
-    // Re-number the remaining commands
-    for (i, command) in config.commands.iter_mut().enumerate() {
-        command.number = i + 1;
-    }
     *changes_made = true;
 }
 
