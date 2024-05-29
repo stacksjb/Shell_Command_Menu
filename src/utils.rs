@@ -20,7 +20,7 @@ pub fn run_command(command: &str) {
         println!("Command executed successfully.");
     } else {
         // Ring the terminal bell and print "Error" in red
-        print!("\x07\x1b[31mError\x1b[0m: Command returned a non-zero exit status.\n");
+        println!("\x07\x1b[31mError\x1b[0m: Command returned a non-zero exit status.");
     }
 }
 
@@ -76,12 +76,17 @@ pub fn generate_menu(config: &Commands, selected_commands: &[usize]) -> Vec<Stri
 }
 
 fn strike_through(text: &str) -> String {
-    text.chars().map(|c| format!("{}\u{0336}", c)).collect()
+    let mut result = String::new();
+    for c in text.chars() {
+        result.push(c);
+        result.push('\u{0336}');
+    }
+    result
 }
 
 pub fn get_page_size() -> usize {
     if let Some((_, height)) = term_size::dimensions() {
-        height as usize - 2 // Leave some space for the prompt
+        height - 2 // Leave some space for the prompt
     } else {
         10 // Fallback page size
     }
