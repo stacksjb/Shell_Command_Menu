@@ -1,5 +1,5 @@
 [package]
-name = "cli_menu"
+name = "shell_command_menu"
 version = "0.1.0"
 edition = "2021"
 
