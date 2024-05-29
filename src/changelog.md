@@ -1,8 +1,8 @@
 # Changelog
 
 
-##Unreleased/WIP
--Rewrite/fix JSON to use single array instead of Command # Index (example in commands1.json)
+5.29.24
+Fixed to handle flat JSON without need for Command Number variable (credit to @bluebear94 Thx!)
 
 5.28.24
 https://github.com/stacksjb/CLI_Shell_Command_Menu/commit/428599c33755c0028791529587540d6a8d97de09
