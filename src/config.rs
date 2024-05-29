@@ -9,17 +9,17 @@ pub struct CommandOption {
     pub command: String,
 }
 
-/// A list of stored shell commands loaded from a file.
+/// A list of stored shell commands loaded from a file.. 
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(transparent)]
-pub struct Commands {
+pub struct Commands { 
     pub commands: Vec<CommandOption>,
 }
 
 /// Loads stored commands from a file.
 pub fn load_config(path: &str) -> Commands {
     let config_data = std::fs::read_to_string(path).expect("Unable to read config file");
-    serde_json::from_str(&config_data).expect("Unable to parse config file")
+    serde_json::from_str(&config_data).expect("Unable to parse config file. Delete commands.json and try again.")
 }
 
 /// Saves stored commands to a file.
