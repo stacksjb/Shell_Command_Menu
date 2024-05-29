@@ -1,22 +1,29 @@
 use serde::{Deserialize, Serialize};
 
+/// A stored shell command.
 #[derive(Clone, Deserialize, Serialize)]
 pub struct CommandOption {
+    /// The human-readable name for this command.
     pub display_name: String,
+    /// The command to run.
     pub command: String,
 }
 
+/// A list of stored shell commands loaded from a file.
 #[derive(Clone, Deserialize, Serialize)]
-pub struct Config {
+#[serde(transparent)]
+pub struct Commands {
     pub commands: Vec<CommandOption>,
 }
 
-pub fn load_config(path: &str) -> Config {
+/// Loads stored commands from a file.
+pub fn load_config(path: &str) -> Commands {
     let config_data = std::fs::read_to_string(path).expect("Unable to read config file");
     serde_json::from_str(&config_data).expect("Unable to parse config file")
 }
 
-pub fn save_config(path: &str, config: &Config) {
+/// Saves stored commands to a file.
+pub fn save_config(path: &str, config: &Commands) {
     let config_data = serde_json::to_string_pretty(config).expect("Failed to serialize config");
     let mut file = std::fs::File::create(path).expect("Unable to create config file");
     std::io::Write::write_all(&mut file, config_data.as_bytes())
@@ -24,6 +31,7 @@ pub fn save_config(path: &str, config: &Config) {
     println!("Config saved.");
 }
 
+/// Creates a default list of stored commands.
 pub fn create_default_config(path: &str) {
     let default_commands = vec![
         CommandOption {
@@ -37,7 +45,7 @@ pub fn create_default_config(path: &str) {
         // Add more commands as needed...
     ];
 
-    let default_config = Config {
+    let default_config = Commands {
         commands: default_commands,
     };
 

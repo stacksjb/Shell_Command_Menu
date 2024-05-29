@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::config::Commands;
 use rodio::{Decoder, OutputStream, Sink};
 use std::fs::File;
 use std::io::BufReader;
@@ -58,7 +58,7 @@ pub async fn play_sound(file_path: &str) {
     .unwrap();
 }
 
-pub fn generate_menu(config: &Config, selected_commands: &[usize]) -> Vec<String> {
+pub fn generate_menu(config: &Commands, selected_commands: &[usize]) -> Vec<String> {
     let menu_options: Vec<String> = config
         .commands
         .iter()

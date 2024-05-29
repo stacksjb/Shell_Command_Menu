@@ -1,4 +1,4 @@
-use crate::config::{save_config, CommandOption, Config};
+use crate::config::{save_config, CommandOption, Commands};
 use crate::utils::prompt;
 use inquire::Select;
 use prettytable::row; //Use prettytable::row to print table of commands
@@ -71,7 +71,7 @@ pub fn edit_menu(config_path: &str) {
     }
 }
 
-fn add_command(config: &mut Config, changes_made: &mut bool) {
+fn add_command(config: &mut Commands, changes_made: &mut bool) {
     let display_name = prompt("Enter display name: ");
     let command = prompt("Enter command: ");
 
@@ -82,7 +82,7 @@ fn add_command(config: &mut Config, changes_made: &mut bool) {
     *changes_made = true;
 }
 
-fn edit_command(config: &mut Config, changes_made: &mut bool) {
+fn edit_command(config: &mut Commands, changes_made: &mut bool) {
     let menu_options: Vec<String> = config
         .commands
         .iter()
@@ -118,7 +118,7 @@ fn edit_command(config: &mut Config, changes_made: &mut bool) {
     }
 }
 
-fn delete_command(config: &mut Config, changes_made: &mut bool) {
+fn delete_command(config: &mut Commands, changes_made: &mut bool) {
     let menu_options: Vec<String> = config
         .commands
         .iter()
@@ -138,7 +138,7 @@ fn delete_command(config: &mut Config, changes_made: &mut bool) {
     *changes_made = true;
 }
 
-fn validate_json(config: &Config) -> bool {
+fn validate_json(config: &Commands) -> bool {
     // Convert the config to a JSON string and check for errors
     serde_json::to_string(&config).is_ok()
 }
