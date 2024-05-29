@@ -28,13 +28,13 @@ pub fn create_default_config(path: &str) {
     let default_commands = vec![
         CommandOption {
             number: 1,
-            display_name: "Clear 📥 Inbox".to_string(),
-            command: "tod list process -f '@Morn & (due today | overdue | no due date)'".to_string(),
+            display_name: "Command 1".to_string(),
+            command: "echo '1'".to_string(),
         },
         CommandOption {
             number: 2,
-            display_name: "📆 Daily & Weekly Review".to_string(),
-            command: "tod list process -f '#GTD Weekly Review 📆 & (overdue | due today | no due date) & !@EOD or #Daily Review 📆 & (overdue | due today | no due date)  & !@EOD'".to_string(),
+            display_name: "Command 2".to_string(),
+            command: "echo 'com 2'".to_string(),
         },
         // Add more commands as needed...
     ];
