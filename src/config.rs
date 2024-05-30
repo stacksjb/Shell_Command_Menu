@@ -52,16 +52,27 @@ pub fn create_default_config(path: &str) -> Commands {
     println!("✅  Creating new default config.");
     default_config
 }
-
+//Print the command count
+pub fn print_num_commands(commands: &[CommandOption]) {
+    println!("{} total commands:", commands.len());
+}
+//Print the command table
 pub fn print_commands(commands: &[CommandOption]) {
-    // Get the terminal width to wrap text accordingly
-    let terminal_width = termion::terminal_size().unwrap().0 as usize;
+
+
 
     // Display the number of commands
-    println!("{} total commands:", commands.len());
-    // Create a table to display the commands if there are any
+    print_num_commands(commands);
+   // print the command table
+    print_command_table(commands);
+}
+
+pub fn print_command_table(commands: &[CommandOption]) {
+    // Get the terminal width to wrap text accordingly
+    let terminal_width = termion::terminal_size().unwrap().0 as usize;
     if !commands.is_empty() {
         let mut table = Table::new();
+        // Create a table to display the commands if there are any
         table.add_row(row!["Number", "Display Name", "Command"]);
 
         for (i, option) in commands.iter().enumerate() {

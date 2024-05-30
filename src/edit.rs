@@ -10,6 +10,7 @@ pub fn edit_menu(config_path: &str) {
     let mut changes_made = false;
 
     loop {
+        println!("🛠️ Welcome to the Edit Command Menu 🛠️");
         print_commands(&config.commands);
 
         // Provide the options to add, edit, delete, or return to main menu
@@ -20,7 +21,7 @@ pub fn edit_menu(config_path: &str) {
             "d. DELETE a command",
             "r. RESET (clear all commands)",
             "i. IMPORT from .csv",
-            "q. Return to Main Menu",
+            "q. Return to Main Menu (prompt to save changes)",
         ];
 
         // Display the menu and prompt the user to select an option
@@ -35,9 +36,10 @@ pub fn edit_menu(config_path: &str) {
             "r. RESET (clear all commands)" => clear_all_commands(&mut config, &mut changes_made),
             "i. IMPORT from .csv" => {
                 import_commands(&mut config, &mut changes_made);
+                print!("Press any key to return to Edit Command Menu...");
                 pause();
             }
-            "q. Return to Main Menu" => {
+            "q. Return to Main Menu (prompt to save changes)" => {
                 if changes_made {
                     let save_prompt = Select::new("Save changes?", vec!["Yes", "No"])
                         .prompt()
@@ -45,12 +47,14 @@ pub fn edit_menu(config_path: &str) {
                     if save_prompt == "Yes" {
                         if validate_json(&config) {
                             save_config(config_path, &config);
-                            println!("✅  Config File Updated.");
+                            println!("✅  Changes Saved. Press any key to return to Main Menu...");
+                            pause();
                         } else {
                             println!("❌  Error: Invalid JSON format. Changes not saved.");
                         }
                     } else {
-                        println!("❌  Changes not saved.");
+                        println!("❌  Changes not saved. Press any key to return to Main Menu...");
+                        pause();
                     }
                 }
                 break;

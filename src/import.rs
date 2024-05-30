@@ -2,19 +2,19 @@ use std::{env, fs, path::Path};
 
 use inquire::Select;
 
-use crate::config::{print_commands, CommandOption, Commands};
+use crate::{config::{print_command_table, CommandOption, Commands}, utils::pause};
 
 pub fn import_commands(config: &mut Commands, changes_made: &mut bool) {
     let dir = env::current_dir().unwrap_or_else(|_| ".".into());
     let files = match list_csv_files(&dir) {
         Ok(files) => files,
         Err(e) => {
-            println!("Could not list files: {e}");
+            println!("⚠️ Could not list files: {e}");
             return;
         }
     };
     if files.is_empty() {
-        println!("No files found in {}", dir.display());
+        println!("⚠️ No files found in {}", dir.display());
         return;
     }
     let path = Select::new("Select a file to import: ", files)
@@ -23,11 +23,13 @@ pub fn import_commands(config: &mut Commands, changes_made: &mut bool) {
     let mut commands = match read_commands(&path) {
         Ok(commands) => commands,
         Err(e) => {
-            println!("Could not import file: {e}");
+            println!("❌  Could not import file: {e}");
             return;
         }
     };
-    print_commands(&commands);
+    //Print the number of commands imported sucessfully
+    println!("Found {} commands from {}", commands.len(), path);
+    print_command_table(&commands);
     let num_commands = commands.len();
 
     let menu_options = vec![
@@ -37,19 +39,22 @@ pub fn import_commands(config: &mut Commands, changes_made: &mut bool) {
     ];
     let menu_prompt = Select::new("Select an option: ", menu_options)
         .prompt()
-        .expect("Failed to display menu");
+        .expect("❌ Failed to display menu");
     match menu_prompt {
         "a. APPEND to current commands" => {
             config.commands.append(&mut commands);
             *changes_made = true;
-            println!("Added {num_commands} commands to the list");
+            println!("{num_commands} commands appended.");
         }
         "o. OVERWRITE current commands" => {
             config.commands = commands;
             *changes_made = true;
-            println!("Replaced list with {num_commands} commands");
+            println!("Replaced config with {num_commands} commands from {path}");
         }
-        _ => println!("Canceled import"),
+        _ => {
+            println!("❌  Canceled import");
+            pause();
+        },
     }
 }
 

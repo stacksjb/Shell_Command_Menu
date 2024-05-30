@@ -22,7 +22,7 @@ pub async fn display_menu(config_path: &str) {
         // Create a list of menu options
         let mut menu_options = generate_menu(&config, &selected_commands);
 
-        menu_options.push("e. EDIT commands".to_string());
+        menu_options.push("e. EDIT Commands".to_string());
         menu_options.push("q. EXIT".to_string());
 
         // Display the menu and prompt the user to select an option
@@ -46,7 +46,7 @@ pub async fn display_menu(config_path: &str) {
                 if choice == "q. EXIT" {
                     println!("Exiting...");
                     exit(0);
-                } else if choice == "e. EDIT commands" {
+                } else if choice == "e. EDIT Commands" {
                     edit_menu(config_path);
                     //Clear the selected commands and last selected index after editing
                     selected_commands.clear();

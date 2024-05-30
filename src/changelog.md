@@ -1,4 +1,10 @@
 # Changelog
+5.30.24
+Added CSV Import Function (append/overwrite) - see exampleimport.csv for format
+Added pause after import and edit so you can easily read what is imported
+Reformatted edit and import to remove duplicate printing of table
+Split out printing of table and count functions
+Clarified wording
 
 5.29.24
 Fixed to handle flat JSON without need for Command Number variable (credit to @bluebear94 Thx!)

@@ -2,10 +2,12 @@ use crate::config::Commands;
 use inquire::Text;
 use rodio::{Decoder, OutputStream, Sink};
 use std::fs::File;
-use std::io::{self, BufReader};
+use std::io::BufReader;
 use std::process::Command;
 use termion::input::TermRead;
 use tokio::task;
+use termion::raw::IntoRawMode;
+use std::io::{stdout, stdin, Write};
 
 pub fn run_command(command: &str) {
     println!("Running command: {}", command);
@@ -28,13 +30,13 @@ pub fn run_command(command: &str) {
 pub fn prompt(message: &str) -> String {
     Text::new(message)
         .prompt()
-        .expect("Failed to display prompt")
+        .expect("❌  Failed to display prompt")
 }
 
 pub fn pause() {
-    println!("Press any key to continue...");
-    let mut keys = io::stdin().keys();
-    let _ = keys.next();
+    let mut stdout = stdout().into_raw_mode().unwrap();
+    stdout.flush().unwrap();
+    stdin().events().next();
 }
 
 pub async fn play_sound(file_path: &str) {
