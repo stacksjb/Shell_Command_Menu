@@ -25,11 +25,11 @@ pub fn load_config(path: &str) -> anyhow::Result<Commands> {
 
 /// Saves stored commands to a file.
 pub fn save_config(path: &str, config: &Commands) {
-    let config_data = serde_json::to_string_pretty(config).expect("Failed to serialize config");
-    let mut file = std::fs::File::create(path).expect("Unable to create config file");
+    let config_data = serde_json::to_string_pretty(config).expect("❌  Failed to serialize config");
+    let mut file = std::fs::File::create(path).expect("❌  Unable to create config file");
     std::io::Write::write_all(&mut file, config_data.as_bytes())
-        .expect("Unable to write to config file");
-    println!("Config saved.");
+        .expect("❌  Unable to write to config file");
+    println!("✅  Config File Created.");
 }
 
 fn default_config() -> Commands {
@@ -38,11 +38,6 @@ fn default_config() -> Commands {
             display_name: "Command 1".to_string(),
             command: "echo '1'".to_string(),
         },
-        CommandOption {
-            display_name: "Command 2".to_string(),
-            command: "echo 'com 2'".to_string(),
-        },
-        // Add more commands as needed...
     ];
 
     Commands {

@@ -12,12 +12,12 @@ pub fn run_command(command: &str) {
         .arg("-c")
         .arg(command)
         .spawn()
-        .expect("Failed to execute command");
+        .expect("❌ Failed to execute command");
 
     let status = child.wait().expect("Command wasn't running");
 
     if status.success() {
-        println!("Command executed successfully.");
+        println!("✅  Command executed successfully.");
     } else {
         // Ring the terminal bell and print "Error" in red
         println!("\x07\x1b[31mError\x1b[0m: Command returned a non-zero exit status.");
@@ -45,13 +45,13 @@ pub async fn play_sound(file_path: &str) {
                     sink.append(source);
                     sink.sleep_until_end();
                 } else {
-                    println!("Failed to decode audio file: {}", file_path);
+                    println!("❌ Failed to decode audio file: {}", file_path);
                 }
             } else {
-                println!("Failed to open audio file: {}", file_path);
+                println!("❌ Failed to open audio file: {}", file_path);
             }
         } else {
-            println!("Failed to initialize audio output stream");
+            println!("❌ Failed to initialize audio output stream");
         }
     })
     .await

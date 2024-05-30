@@ -15,7 +15,10 @@ pub fn edit_menu(config_path: &str) {
     let terminal_width = termion::terminal_size().unwrap().0 as usize;
 
     loop {
-        // Create a table to display the commands
+        // Display the number of commands
+        println!("{} Total commands.", config.commands.len());
+          // Create a table to display the commands if the number of commands is >0
+        if config.commands.len() > 0 {
         let mut table = Table::new();
         table.add_row(row!["Number", "Display Name", "Command"]);
 
@@ -27,17 +30,15 @@ pub fn edit_menu(config_path: &str) {
             ]));
         }
 
-        // Print the table
-        println!("Current commands:");
         table.printstd();
-
+        }
         // Provide the options to add, edit, delete, or return to main menu
 
         let menu_options = vec![
             "a. ADD a new command",
             "e. EDIT a command",
             "d. DELETE a command",
-            "D. DELETE all commands",
+            "r. RESET (clear all commands)",
             "q. Return to Main Menu",
         ];
 
@@ -50,7 +51,7 @@ pub fn edit_menu(config_path: &str) {
             "a. ADD a new command" => add_command(&mut config, &mut changes_made),
             "e. EDIT a command" => edit_command(&mut config, &mut changes_made),
             "d. DELETE a command" => delete_command(&mut config, &mut changes_made),
-            "D. DELETE all commands" => delete_all_commands(&mut config, &mut changes_made),
+            "r. RESET (clear all commands)" => clear_all_commands(&mut config, &mut changes_made),
             "q. Return to Main Menu" => {
                 if changes_made {
                     let save_prompt = Select::new("Save changes?", vec!["Yes", "No"])
@@ -129,19 +130,19 @@ fn delete_command(config: &mut Commands, changes_made: &mut bool) {
         .collect();
     let selected_command = Select::new("Select a command to delete:", menu_options)
         .prompt()
-        .expect("Failed to display menu");
+        .expect("❌  Failed to display menu");
     // Find the index of the selected command
     let index = config
         .commands
         .iter()
         .position(|c| c.display_name == selected_command)
-        .expect("Selected command not found");
+        .expect("⚠️  Selected command not found");
     // Remove the command
     config.commands.remove(index);
     *changes_made = true;
 }
 
-fn delete_all_commands(config: &mut Commands, changes_made: &mut bool) {
+fn clear_all_commands(config: &mut Commands, changes_made: &mut bool) {
     config.commands.clear();
     *changes_made = true;
 }

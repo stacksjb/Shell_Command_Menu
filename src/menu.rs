@@ -9,7 +9,7 @@ pub async fn display_menu(config_path: &str) {
     let mut last_selected: Option<usize> = None;
     loop {
         let Ok(config) = crate::config::load_config(config_path) else {
-            println!("Config does not exist or is invalid; editing new config");
+            println!("⚠️  Config does not exist or is invalid; editing new config");
             edit_menu(config_path);
             selected_commands.clear();
             last_selected = None;
@@ -27,14 +27,14 @@ pub async fn display_menu(config_path: &str) {
         // Display the menu and prompt the user to select an option
         let menu_prompt = if let Some(last) = last_selected {
             Select::new(
-                "Welcome to the CLI Command Shortcut Menu! Select an option:",
+                "Welcome to the CLI Command Shortcut Menu! Select a command to execute:",
                 menu_options,
             )
             .with_starting_cursor(last)
             .with_page_size(page_size)
         } else {
             Select::new(
-                "Welcome to the CLI Command Shortcut Menu! Select an option:",
+                "Welcome to the CLI Command Shortcut Menu! Select a command to execute:",
                 menu_options,
             )
             .with_page_size(page_size)
@@ -61,14 +61,14 @@ pub async fn display_menu(config_path: &str) {
                             selected_commands.push(num);
                             last_selected = Some(index);
                         } else {
-                            println!("Invalid choice, please try again.");
+                            println!("❌  Invalid choice, please try again.");
                         }
                     } else {
-                        println!("Invalid choice, please try again.");
+                        println!("❌  Invalid choice, please try again.");
                     }
                 }
             }
-            Err(_) => println!("Error reading input. Please try again."),
+            Err(_) => println!("❌  Error reading input. Please try again."),
         }
     }
 }
