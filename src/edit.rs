@@ -1,9 +1,7 @@
-use crate::config::{create_default_config, save_config, CommandOption, Commands};
+use crate::config::{create_default_config, print_commands, save_config, CommandOption, Commands};
+use crate::import::import_commands;
 use crate::utils::prompt;
 use inquire::Select;
-use prettytable::row; //Use prettytable::row to print table of commands
-use prettytable::{Cell, Row, Table};
-use textwrap::fill; // Import textwrap for wrapping text
 
 pub fn edit_menu(config_path: &str) {
     let mut config = crate::config::load_config(config_path)
@@ -11,27 +9,9 @@ pub fn edit_menu(config_path: &str) {
     let _original_config = config.clone();
     let mut changes_made = false;
 
-    // Get the terminal width to wrap text accordingly
-    let terminal_width = termion::terminal_size().unwrap().0 as usize;
-
     loop {
-        // Display the number of commands
-        println!("{} Total commands.", config.commands.len());
-          // Create a table to display the commands if the number of commands is >0
-        if config.commands.len() > 0 {
-        let mut table = Table::new();
-        table.add_row(row!["Number", "Display Name", "Command"]);
+        print_commands(&config.commands);
 
-        for (i, option) in config.commands.iter().enumerate() {
-            table.add_row(Row::new(vec![
-                Cell::new(&(i + 1).to_string()),
-                Cell::new(&fill(&option.display_name, terminal_width / 3)),
-                Cell::new(&fill(&option.command, terminal_width / 3 * 2)),
-            ]));
-        }
-
-        table.printstd();
-        }
         // Provide the options to add, edit, delete, or return to main menu
 
         let menu_options = vec![
@@ -39,6 +19,7 @@ pub fn edit_menu(config_path: &str) {
             "e. EDIT a command",
             "d. DELETE a command",
             "r. RESET (clear all commands)",
+            "i. IMPORT from .csv",
             "q. Return to Main Menu",
         ];
 
@@ -52,6 +33,7 @@ pub fn edit_menu(config_path: &str) {
             "e. EDIT a command" => edit_command(&mut config, &mut changes_made),
             "d. DELETE a command" => delete_command(&mut config, &mut changes_made),
             "r. RESET (clear all commands)" => clear_all_commands(&mut config, &mut changes_made),
+            "i. IMPORT from .csv" => import_commands(&mut config, &mut changes_made),
             "q. Return to Main Menu" => {
                 if changes_made {
                     let save_prompt = Select::new("Save changes?", vec!["Yes", "No"])

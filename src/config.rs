@@ -1,5 +1,7 @@
 use anyhow::Context;
+use prettytable::{row, Cell, Row, Table};
 use serde::{Deserialize, Serialize};
+use textwrap::fill;
 
 /// A stored shell command.
 #[derive(Clone, Deserialize, Serialize)]
@@ -32,12 +34,10 @@ pub fn save_config(path: &str, config: &Commands) {
 }
 
 fn default_config() -> Commands {
-    let default_commands = vec![
-        CommandOption {
-            display_name: "Command 1".to_string(),
-            command: "echo '1'".to_string(),
-        },
-    ];
+    let default_commands = vec![CommandOption {
+        display_name: "Command 1".to_string(),
+        command: "echo '1'".to_string(),
+    }];
 
     Commands {
         commands: default_commands,
@@ -51,4 +51,27 @@ pub fn create_default_config(path: &str) -> Commands {
     save_config(path, &default_config);
     println!("✅  Creating new default config.");
     default_config
+}
+
+pub fn print_commands(commands: &[CommandOption]) {
+    // Get the terminal width to wrap text accordingly
+    let terminal_width = termion::terminal_size().unwrap().0 as usize;
+
+    // Display the number of commands
+    println!("{} total commands:", commands.len());
+    // Create a table to display the commands if there are any
+    if !commands.is_empty() {
+        let mut table = Table::new();
+        table.add_row(row!["Number", "Display Name", "Command"]);
+
+        for (i, option) in commands.iter().enumerate() {
+            table.add_row(Row::new(vec![
+                Cell::new(&(i + 1).to_string()),
+                Cell::new(&fill(&option.display_name, terminal_width / 3)),
+                Cell::new(&fill(&option.command, terminal_width / 3 * 2)),
+            ]));
+        }
+
+        table.printstd();
+    }
 }

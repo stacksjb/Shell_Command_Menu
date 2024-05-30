@@ -1,7 +1,8 @@
 mod config;
 mod edit;
-mod utils;
+mod import;
 mod menu;
+mod utils;
 
 fn main() {
     // Path to the commands.json file
