@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::io::{self, Write};
 use std::process::Command;
+use termion::input::TermRead;
 use tokio::task;
 
 pub fn run_command(command: &str) {
@@ -33,6 +34,12 @@ pub fn prompt(message: &str) -> String {
         .read_line(&mut input)
         .expect("Failed to read line");
     input.trim().to_string()
+}
+
+pub fn pause() {
+    println!("Press any key to continue...");
+    let mut keys = io::stdin().keys();
+    let _ = keys.next();
 }
 
 pub async fn play_sound(file_path: &str) {

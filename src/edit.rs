@@ -1,6 +1,6 @@
 use crate::config::{create_default_config, print_commands, save_config, CommandOption, Commands};
 use crate::import::import_commands;
-use crate::utils::prompt;
+use crate::utils::{pause, prompt};
 use inquire::Select;
 
 pub fn edit_menu(config_path: &str) {
@@ -33,7 +33,10 @@ pub fn edit_menu(config_path: &str) {
             "e. EDIT a command" => edit_command(&mut config, &mut changes_made),
             "d. DELETE a command" => delete_command(&mut config, &mut changes_made),
             "r. RESET (clear all commands)" => clear_all_commands(&mut config, &mut changes_made),
-            "i. IMPORT from .csv" => import_commands(&mut config, &mut changes_made),
+            "i. IMPORT from .csv" => {
+                import_commands(&mut config, &mut changes_made);
+                pause();
+            }
             "q. Return to Main Menu" => {
                 if changes_made {
                     let save_prompt = Select::new("Save changes?", vec!["Yes", "No"])

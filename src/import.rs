@@ -28,6 +28,7 @@ pub fn import_commands(config: &mut Commands, changes_made: &mut bool) {
         }
     };
     print_commands(&commands);
+    let num_commands = commands.len();
 
     let menu_options = vec![
         "a. APPEND to current commands",
@@ -41,12 +42,14 @@ pub fn import_commands(config: &mut Commands, changes_made: &mut bool) {
         "a. APPEND to current commands" => {
             config.commands.append(&mut commands);
             *changes_made = true;
+            println!("Added {num_commands} commands to the list");
         }
         "o. OVERWRITE current commands" => {
             config.commands = commands;
             *changes_made = true;
+            println!("Replaced list with {num_commands} commands");
         }
-        _ => (),
+        _ => println!("Canceled import"),
     }
 }
 
