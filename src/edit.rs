@@ -61,8 +61,8 @@ pub fn edit_menu(config_path: &str) {
 }
 
 fn add_command(config: &mut Commands, changes_made: &mut bool) {
-    let display_name = prompt("Enter display name: ");
-    let command = prompt("Enter command: ");
+    let display_name = prompt("Enter display name:");
+    let command = prompt("Enter command:");
 
     config.commands.push(CommandOption {
         display_name,
@@ -94,13 +94,13 @@ fn edit_command(config: &mut Commands, changes_made: &mut bool) {
     println!("Editing command: {}", command.display_name);
     println!("Current command: {}", command.command);
 
-    let new_display_name = prompt("Enter new display name (leave empty to keep current): ");
+    let new_display_name = prompt("Enter new display name (leave empty to keep current):");
     if !new_display_name.is_empty() {
         command.display_name = new_display_name;
         *changes_made = true;
     }
 
-    let new_command = prompt("Enter new command (leave empty to keep current): ");
+    let new_command = prompt("Enter new command (leave empty to keep current):");
     if !new_command.is_empty() {
         command.command = new_command;
         *changes_made = true;

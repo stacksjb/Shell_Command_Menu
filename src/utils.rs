@@ -1,4 +1,5 @@
 use crate::config::Commands;
+use inquire::Text;
 use rodio::{Decoder, OutputStream, Sink};
 use std::fs::File;
 use std::io::BufReader;
@@ -26,14 +27,9 @@ pub fn run_command(command: &str) {
 }
 
 pub fn prompt(message: &str) -> String {
-    print!("{}", message);
-    io::stdout().flush().unwrap();
-
-    let mut input = String::new();
-    io::stdin()
-        .read_line(&mut input)
-        .expect("Failed to read line");
-    input.trim().to_string()
+    Text::new(message)
+        .prompt()
+        .expect("Failed to display prompt")
 }
 
 pub fn pause() {
