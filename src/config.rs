@@ -29,7 +29,6 @@ pub fn save_config(path: &str, config: &Commands) {
     let mut file = std::fs::File::create(path).expect("❌  Unable to create config file");
     std::io::Write::write_all(&mut file, config_data.as_bytes())
         .expect("❌  Unable to write to config file");
-    println!("✅  Config File Created.");
 }
 
 fn default_config() -> Commands {
@@ -50,6 +49,6 @@ pub fn create_default_config(path: &str) -> Commands {
     let default_config = default_config();
 
     save_config(path, &default_config);
-
+    println!("✅  Creating new default config.");
     default_config
 }

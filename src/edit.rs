@@ -60,17 +60,17 @@ pub fn edit_menu(config_path: &str) {
                     if save_prompt == "Yes" {
                         if validate_json(&config) {
                             save_config(config_path, &config);
-                            println!("Changes saved.");
+                            println!("✅  Config File Updated.");
                         } else {
-                            println!("Error: Invalid JSON format. Changes not saved.");
+                            println!("❌  Error: Invalid JSON format. Changes not saved.");
                         }
                     } else {
-                        println!("Changes not saved.");
+                        println!("❌  Changes not saved.");
                     }
                 }
                 break;
             }
-            _ => println!("Invalid choice, please try again."),
+            _ => println!("❌  Invalid choice, please try again."),
         }
     }
 }

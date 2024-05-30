@@ -8,8 +8,9 @@ pub async fn display_menu(config_path: &str) {
     let mut selected_commands: Vec<usize> = vec![];
     let mut last_selected: Option<usize> = None;
     loop {
+        //Checking here to handle the case where the config is deleted or modified or invalid or nonexistent
         let Ok(config) = crate::config::load_config(config_path) else {
-            println!("⚠️  Config does not exist or is invalid; editing new config");
+            println!("⚠️ Config does not exist or is invalid; editing new config");
             edit_menu(config_path);
             selected_commands.clear();
             last_selected = None;
