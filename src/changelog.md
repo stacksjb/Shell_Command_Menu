@@ -1,5 +1,8 @@
 # Changelog
 
+6.11.24
+Added auto comments and menu digit padding
+
 5.30.24
 Added CSV Import Function (append/overwrite) - see exampleimport.csv for format
 Added pause after import and edit so you can easily read what is imported
