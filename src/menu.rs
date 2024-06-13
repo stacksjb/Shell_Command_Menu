@@ -1,5 +1,5 @@
 use crate::edit::edit_menu; // Importing edit_menu function from edit module
-use crate::utils::{generate_menu, get_page_size, play_sound, run_command}; // Importing functions from utils module
+use crate::utils::{generate_menu, play_sound, run_command}; // Importing functions from utils module
 use inquire::Select; // Importing Select prompt from inquire crate
 use std::process::exit; // Importing exit function from std::process module
 
@@ -21,9 +21,6 @@ pub async fn display_menu(config_path: &str) {
             }
         };
 
-        // Determine the terminal height and set the page size accordingly
-        let page_size = get_page_size(); // Getting terminal height and setting page size accordingly
-
         // Create a list of menu options
         let mut menu_options = generate_menu(&config, &selected_commands); // Generating menu options from config and selected commands
         menu_options.push("e. EDIT Commands".to_string()); // Adding option to edit commands
@@ -36,13 +33,11 @@ pub async fn display_menu(config_path: &str) {
                 menu_options,
             )
             .with_starting_cursor(last) // Setting starting cursor to last selected index
-            .with_page_size(page_size) // Setting page size
         } else {
             Select::new(
                 "Welcome to the CLI Command Shortcut Menu! Select a command to execute:", // Prompt message
                 menu_options,
             )
-            .with_page_size(page_size) // Setting page size
         };
 
         match menu_prompt.prompt() {

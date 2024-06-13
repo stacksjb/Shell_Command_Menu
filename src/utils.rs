@@ -94,12 +94,3 @@ fn strike_through(text: &str) -> String {
     }
     result // Returning the resulting string with strike-through
 }
-
-// Function to get the page size for menu display
-pub fn get_page_size() -> usize {
-    if let Some((_, height)) = term_size::dimensions() { // Getting terminal dimensions
-        height - 2 // Subtracting 2 for leaving space for the prompt
-    } else {
-        10 // Fallback page size if terminal dimensions cannot be determined
-    }
-}
