@@ -56,7 +56,10 @@ pub async fn display_menu(config_path: &str) {
                     last_selected = None; // Resetting last selected index
                     continue; // Continuing loop
                 } else {
-                    let num: usize = choice.split('.').next().unwrap().parse().unwrap(); // Extracting command number from choice
+                    // Extract the command number from choice, trim to remove any leading/trailing spaces
+                    let num_str = choice.split('.').next().unwrap().trim();
+                    let num: usize = num_str.parse().unwrap(); // Parse the number
+                    
                     if let Some(index) = num.checked_sub(1) { // Checking if index is valid
                         if let Some(command) = config.commands.get(index) { // Getting command at index
                             tokio::spawn(play_sound("whoosh-6316.mp3")); // Playing sound asynchronously
@@ -73,5 +76,6 @@ pub async fn display_menu(config_path: &str) {
             }
             Err(_) => println!("❌  Error reading input. Please try again."), // Handling input error
         }
+
     }
 }
