@@ -4,9 +4,8 @@ use rodio::{Decoder, OutputStream, Sink}; // Importing types for audio playback
 use std::fs::File; // Importing File struct for file operations
 use std::io::BufReader; // Importing BufReader for buffered reading from files
 use std::process::Command; // Importing Command struct for executing shell commands
-use termion::input::TermRead; // Importing TermRead trait for reading input events
 use tokio::task; // Importing task module from Tokio for asynchronous task handling
-use termion::raw::IntoRawMode; // Importing IntoRawMode trait for entering raw mode
+use termion::{raw::IntoRawMode, input::TermRead, clear, cursor, terminal_size}; // Importing IntoRawMode trait for entering raw mode
 use std::io::{stdout, stdin, Write}; // Importing stdout, stdin, and Write traits for I/O operations
 
 // Function to run a shell command
@@ -93,4 +92,15 @@ fn strike_through(text: &str) -> String {
         result.push('\u{0336}'); // Adding a Unicode character for strike-through
     }
     result // Returning the resulting string with strike-through
+}
+// Function to get the terminal height
+pub fn get_terminal_height() -> u16 {
+    let (_, height) = terminal_size().unwrap();
+    height
+}
+
+// Function to clear the screen
+pub fn clear_screen() {
+    print!("{}{}", clear::All, cursor::Goto(1, 1));
+    stdout().flush().unwrap();
 }

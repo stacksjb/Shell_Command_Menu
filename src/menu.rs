@@ -1,5 +1,5 @@
 use crate::edit::edit_menu; // Importing edit_menu function from edit module
-use crate::utils::{generate_menu, play_sound, run_command}; // Importing functions from utils module
+use crate::utils::{generate_menu, play_sound, run_command, get_terminal_height, clear_screen}; // Importing functions from utils module
 use inquire::Select; // Importing Select prompt from inquire crate
 use std::process::exit; // Importing exit function from std::process module
 
@@ -7,6 +7,7 @@ use std::process::exit; // Importing exit function from std::process module
 pub async fn display_menu(config_path: &str) {
     let mut selected_commands: Vec<usize> = vec![]; // Initializing vector to hold selected commands
     let mut last_selected: Option<usize> = None; // Initializing variable to hold index of last selected command
+
 
     loop {
         // Checking if the config is valid or exists; editing if not
@@ -21,10 +22,18 @@ pub async fn display_menu(config_path: &str) {
             }
         };
 
+        // Clear the terminal screen before displaying the menu
+        clear_screen();
+
         // Create a list of menu options
         let mut menu_options = generate_menu(&config, &selected_commands); // Generating menu options from config and selected commands
         menu_options.push("e. EDIT Commands".to_string()); // Adding option to edit commands
         menu_options.push("q. EXIT".to_string()); // Adding option to exit
+
+
+        // Get the terminal height to set the height of the inquire prompt
+        let term_height = get_terminal_height() as usize;
+        let display_height = term_height.saturating_sub(3); // Adjust height to avoid overflow
 
         // Display the menu and prompt the user to select an option
         let menu_prompt = if let Some(last) = last_selected { // Checking if last selected index exists
@@ -33,11 +42,14 @@ pub async fn display_menu(config_path: &str) {
                 menu_options,
             )
             .with_starting_cursor(last) // Setting starting cursor to last selected index
-        } else {
+            .with_page_size(display_height) // Setting page size to terminal height
+        } else { // If no last selected index
             Select::new(
                 "Welcome to the CLI Command Shortcut Menu! Select a command to execute:", // Prompt message
                 menu_options,
+
             )
+            .with_page_size(display_height) // Setting page size to terminal height
         };
 
         match menu_prompt.prompt() {
