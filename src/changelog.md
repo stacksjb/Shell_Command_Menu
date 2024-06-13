@@ -2,6 +2,7 @@
 
 6.11.24
 Added auto comments and menu digit padding
+Fixed menu parsing to handle terminal size correctly
 
 5.30.24
 Added CSV Import Function (append/overwrite) - see exampleimport.csv for format
