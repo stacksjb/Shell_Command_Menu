@@ -16,6 +16,7 @@ Fixed to handle flat JSON without need for Command Number variable (credit to @b
 Added purge command to delete all entries
 Added logic to automatically edit if file does not exist after creating the default
 Added command count(s) to edit list; only print table if command count >0
+Added termion back for specific functions
 
 5.28.24
 <https://github.com/stacksjb/CLI_Shell_Command_Menu/commit/428599c33755c0028791529587540d6a8d97de09>
