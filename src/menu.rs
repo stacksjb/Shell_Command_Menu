@@ -21,6 +21,9 @@ pub async fn display_menu(config_path: &str) {
                 continue; // Continuing loop
             }
         };
+        // Get the terminal height to set the height of the inquire prompt
+        let term_height = get_terminal_height() as usize;
+        let display_height = term_height.saturating_sub(3); // Adjust height to avoid overflow
 
         // Clear the terminal screen before displaying the menu
         clear_screen();
@@ -31,9 +34,7 @@ pub async fn display_menu(config_path: &str) {
         menu_options.push("q. EXIT".to_string()); // Adding option to exit
 
 
-        // Get the terminal height to set the height of the inquire prompt
-        let term_height = get_terminal_height() as usize;
-        let display_height = term_height.saturating_sub(3); // Adjust height to avoid overflow
+
 
         // Display the menu and prompt the user to select an option
         let menu_prompt = if let Some(last) = last_selected { // Checking if last selected index exists
@@ -59,6 +60,7 @@ pub async fn display_menu(config_path: &str) {
                     exit(0); // Exiting program
                 } else if choice == "e. EDIT Commands" { // Checking if user chose to edit commands
                     edit_menu(config_path); // Editing commands
+                    
                     selected_commands.clear(); // Clearing selected commands
                     last_selected = None; // Resetting last selected index
                     continue; // Continuing loop
