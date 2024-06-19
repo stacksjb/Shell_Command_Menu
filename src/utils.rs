@@ -3,10 +3,10 @@ use inquire::Text; // Importing Text prompt from the inquire crate
 use rodio::{Decoder, OutputStream, Sink}; // Importing types for audio playback
 use std::fs::File; // Importing File struct for file operations
 use std::io::BufReader; // Importing BufReader for buffered reading from files
+use std::io::{stdin, stdout, Write};
 use std::process::Command; // Importing Command struct for executing shell commands
-use tokio::task; // Importing task module from Tokio for asynchronous task handling
-use termion::{raw::IntoRawMode, input::TermRead, clear, cursor, terminal_size}; // Importing IntoRawMode trait for entering raw mode
-use std::io::{stdout, stdin, Write}; // Importing stdout, stdin, and Write traits for I/O operations
+use termion::{clear, cursor, input::TermRead, raw::IntoRawMode, terminal_size}; // Importing IntoRawMode trait for entering raw mode
+use tokio::task; // Importing task module from Tokio for asynchronous task handling // Importing stdout, stdin, and Write traits for I/O operations
 
 // Function to run a shell command
 pub fn run_command(command: &str) {
@@ -19,10 +19,12 @@ pub fn run_command(command: &str) {
 
     let status = child.wait().expect("Command wasn't running"); // Waiting for the command to finish
 
-    if status.success() { // Checking if the command was successful
+    if status.success() {
+        // Checking if the command was successful
         println!("✅ Command executed successfully."); // Printing success message
     } else {
-        println!("\x07\x1b[31mError\x1b[0m: Command returned a non-zero exit status."); // Printing error message
+        println!("\x07\x1b[31mError\x1b[0m: Command returned a non-zero exit status.");
+        // Printing error message
     }
 }
 
@@ -43,10 +45,14 @@ pub fn pause() {
 // Function to play a sound asynchronously
 pub async fn play_sound(file_path: &str) {
     let file_path = file_path.to_string(); // Cloning the file_path to be owned by the closure
-    task::spawn_blocking(move || { // Spawning a blocking task
-        if let Ok((_stream, stream_handle)) = OutputStream::try_default() { // Trying to get the default audio output stream
-            if let Ok(file) = File::open(&file_path) { // Trying to open the audio file
-                if let Ok(source) = Decoder::new(BufReader::new(file)) { // Trying to decode the audio file
+    task::spawn_blocking(move || {
+        // Spawning a blocking task
+        if let Ok((_stream, stream_handle)) = OutputStream::try_default() {
+            // Trying to get the default audio output stream
+            if let Ok(file) = File::open(&file_path) {
+                // Trying to open the audio file
+                if let Ok(source) = Decoder::new(BufReader::new(file)) {
+                    // Trying to decode the audio file
                     let sink = Sink::try_new(&stream_handle).unwrap(); // Creating a sink for the audio stream
                     sink.append(source); // Appending the audio source to the sink
                     sink.sleep_until_end(); // Sleeping until the audio playback ends
@@ -74,8 +80,10 @@ pub fn generate_menu(config: &Commands, selected_commands: &[usize]) -> Vec<Stri
         .map(|(index, cmd)| {
             let number = index + 1; // Getting the number of the command
             let padded_number = format!("{: >width$}", number, width = max_number_width); // Padding the number with spaces
-            if selected_commands.contains(&number) { // Checking if the command is selected
-                format!("{}. {}", padded_number, strike_through(&cmd.display_name)) // Striking through the command name if selected
+            if selected_commands.contains(&number) {
+                // Checking if the command is selected
+                format!("{}. {}", padded_number, strike_through(&cmd.display_name))
+            // Striking through the command name if selected
             } else {
                 format!("{}. {}", padded_number, cmd.display_name) // Otherwise, displaying the command name
             }
@@ -87,7 +95,8 @@ pub fn generate_menu(config: &Commands, selected_commands: &[usize]) -> Vec<Stri
 // Function to strike through text
 fn strike_through(text: &str) -> String {
     let mut result = String::new(); // Initializing an empty string to hold the result
-    for c in text.chars() { // Iterating over each character in the text
+    for c in text.chars() {
+        // Iterating over each character in the text
         result.push(c); // Appending the character to the result string
         result.push('\u{0336}'); // Adding a Unicode character for strike-through
     }

@@ -1,0 +1,43 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+    -   id: check-yaml
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+    -   id: fix-encoding-pragma
+    -   id: check-json
+    -   id: pretty-format-json
+    -   id: requirements-txt-fixer
+    -   id: check-case-conflict
+    -   id: check-builtin-literals
+    -   id: check-added-large-files
+    -   id: detect-private-key
+    -   id: name-tests-test
+    -   id: mixed-line-ending
+    -   id: name-tests-test
+-   repo: local
+    hooks:
+      - id: fmt
+        name: fmt
+        language: system
+        files: '\.rs$'
+        exclude: '.*/templates/.*\.rs$'
+        entry: cargo fmt -- --check --verbose
+
+      - id: clippy
+        name: clippy
+        language: system
+        files: '\.rs$'
+        entry: cargo clippy --all-targets --all -- -D warnings
+        pass_filenames: false
+
+      - id: test
+        name: test
+        language: system
+        files: '\.rs$'
+        entry: cargo test
+        pass_filenames: false
+
+default_language_version:
+    python: python3

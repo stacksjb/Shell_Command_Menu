@@ -34,23 +34,29 @@ pub fn edit_menu(config_path: &str) {
             "e. EDIT a command" => edit_command(&mut config, &mut changes_made), // Editing an existing command
             "d. DELETE a command" => delete_command(&mut config, &mut changes_made), // Deleting a command
             "r. RESET (clear all commands)" => clear_all_commands(&mut config, &mut changes_made), // Clearing all commands
-            "i. IMPORT from .csv" => { // Importing commands from CSV file
+            "i. IMPORT from .csv" => {
+                // Importing commands from CSV file
                 import_commands(&mut config, &mut changes_made);
                 print!("Press any key to return to Edit Command Menu..."); // Prompting user to return to menu
                 pause(); // Pausing execution
             }
-            "q. Return to Main Menu (prompt to save changes)" => { // Returning to main menu
-                if changes_made { // If changes were made
+            "q. Return to Main Menu (prompt to save changes)" => {
+                // Returning to main menu
+                if changes_made {
+                    // If changes were made
                     let save_prompt = Select::new("Save changes?", vec!["Yes", "No"])
                         .prompt()
                         .expect("Failed to display menu"); // Prompting user to save changes
-                    if save_prompt == "Yes" { // If user chooses to save changes
-                        if validate_json(&config) { // Validating JSON format
+                    if save_prompt == "Yes" {
+                        // If user chooses to save changes
+                        if validate_json(&config) {
+                            // Validating JSON format
                             save_config(config_path, &config); // Saving changes to config file
                             println!("✅  Changes Saved. Press any key to return to Main Menu..."); // Printing success message
                             pause(); // Pausing execution
                         } else {
-                            println!("❌  Error: Invalid JSON format. Changes not saved."); // Printing error message
+                            println!("❌  Error: Invalid JSON format. Changes not saved.");
+                            // Printing error message
                         }
                     } else {
                         println!("❌  Changes not saved. Press any key to return to Main Menu..."); // Printing message
@@ -69,7 +75,8 @@ fn add_command(config: &mut Commands, changes_made: &mut bool) {
     let display_name = prompt("Enter display name:"); // Prompting user for display name
     let command = prompt("Enter command:"); // Prompting user for command
 
-    config.commands.push(CommandOption { // Adding new command to config
+    config.commands.push(CommandOption {
+        // Adding new command to config
         display_name,
         command,
     });
@@ -99,13 +106,15 @@ fn edit_command(config: &mut Commands, changes_made: &mut bool) {
     println!("Current command: {}", command.command); // Printing current command
 
     let new_display_name = prompt("Enter new display name (leave empty to keep current):"); // Prompting user for new display name
-    if !new_display_name.is_empty() { // If new display name is provided
+    if !new_display_name.is_empty() {
+        // If new display name is provided
         command.display_name = new_display_name; // Updating display name
         *changes_made = true; // Flagging changes made
     }
 
     let new_command = prompt("Enter new command (leave empty to keep current):"); // Prompting user for new command
-    if !new_command.is_empty() { // If new command is provided
+    if !new_command.is_empty() {
+        // If new command is provided
         command.command = new_command; // Updating command
         *changes_made = true; // Flagging changes made
     }

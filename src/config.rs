@@ -66,11 +66,13 @@ pub fn print_commands(commands: &[CommandOption]) {
 
 pub fn print_command_table(commands: &[CommandOption]) {
     let terminal_width = termion::terminal_size().unwrap().0 as usize; // Getting terminal width
-    if !commands.is_empty() { // Checking if there are any commands
+    if !commands.is_empty() {
+        // Checking if there are any commands
         let mut table = Table::new(); // Creating a new table
         table.add_row(row!["Number", "Display Name", "Command"]); // Adding table headers
 
-        for (i, option) in commands.iter().enumerate() { // Iterating over commands
+        for (i, option) in commands.iter().enumerate() {
+            // Iterating over commands
             table.add_row(Row::new(vec![
                 Cell::new(&(i + 1).to_string()), // Adding cell for command number
                 Cell::new(&fill(&option.display_name, terminal_width / 3)), // Adding cell for display name with text wrapping
