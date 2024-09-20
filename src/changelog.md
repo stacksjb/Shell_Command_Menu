@@ -1,5 +1,12 @@
 # Changelog
 
+9.11.24
+Added Directories crate and updated to store commands.json in a standard location across all OS for consistent experience with running on OS per user instead of per location
+Updated dependencies
+Renamed config.rs to commands.rs
+Updated vnum to 0.2.0 for prework to publish for full build on target OS
+Updated edits to use PathBuf instead of String for config path
+
 6.11.24
 Added auto comments and menu digit padding
 Fixed menu parsing to handle terminal size correctly

@@ -3,7 +3,7 @@ use std::{env, fs, path::Path}; // Importing necessary modules from standard lib
 use inquire::Select; // Importing Select prompt from inquire crate
 
 use crate::{
-    config::{print_command_table, CommandOption, Commands},
+    commands::{print_command_table, CommandOption, Commands},
     utils::pause,
 }; // Importing functions and structs from other modules
 

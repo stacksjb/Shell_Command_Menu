@@ -1,11 +1,19 @@
-use crate::config::{create_default_config, print_commands, save_config, CommandOption, Commands}; // Importing functions and structs from other modules
-use crate::import::import_commands; // Importing function from import module
-use crate::utils::{pause, prompt}; // Importing functions from utils module
+use std::{path::PathBuf, process};
+
+use crate::{
+    commands::{print_commands, CommandOption, Commands},
+    config::save_config,
+    import::import_commands,
+    utils::{pause, prompt},
+}; // Importing function from import module
 use inquire::Select; // Importing Select prompt from inquire crate
 
-pub fn edit_menu(config_path: &str) {
+pub fn edit_menu(config_path: &PathBuf) {
     let mut config = crate::config::load_config(config_path) // Loading config or creating default if not found
-        .unwrap_or_else(|_e| create_default_config(config_path)); // Handling errors by creating default config
+        .unwrap_or_else(|e| {
+            eprintln!("Error: {}", e); // Print the error message
+            process::exit(1) // Exit with a status code of 1
+        }); // Handling errors by creating default config
     let _original_config = config.clone(); // Cloning the original config
     let mut changes_made = false; // Flag to track changes made to config
 

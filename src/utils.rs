@@ -1,4 +1,4 @@
-use crate::config::Commands; // Importing Commands struct from the config module
+use crate::commands::Commands; // Importing Commands struct from the commands module
 use inquire::Text; // Importing Text prompt from the inquire crate
 use rodio::{Decoder, OutputStream, Sink}; // Importing types for audio playback
 use std::fs::File; // Importing File struct for file operations

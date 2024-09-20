@@ -1,10 +1,12 @@
 use crate::edit::edit_menu; // Importing edit_menu function from edit module
 use crate::utils::{clear_screen, generate_menu, get_terminal_height, play_sound, run_command}; // Importing functions from utils module
-use inquire::Select; // Importing Select prompt from inquire crate
+use inquire::Select;
+use std::path::PathBuf;
+// Importing Select prompt from inquire crate
 use std::process::exit; // Importing exit function from std::process module
 
 #[tokio::main]
-pub async fn display_menu(config_path: &str) {
+pub async fn display_menu(config_path: &PathBuf) {
     let mut selected_commands: Vec<usize> = vec![]; // Initializing vector to hold selected commands
     let mut last_selected: Option<usize> = None; // Initializing variable to hold index of last selected command
 
