@@ -6,6 +6,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+// Function to get the path of the config file; else create it
 pub(crate) fn get_config_file_path() -> Result<PathBuf, String> {
     // Get the base directories for the current user
     let base_dirs = BaseDirs::new().ok_or("Could not get base directories")?;
