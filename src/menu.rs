@@ -88,11 +88,8 @@ pub async fn display_menu(config_path: &PathBuf) {
                         if let Some(command) = config.commands.get(index) {
                             // Getting command at index
                             //If cmd_sound is set, play the sound
-                            if config.cmd_sound != Some(PathBuf::new()) {
-                                if let Some(cmd_sound) = &config.cmd_sound {
-                                    tokio::spawn(play_sound(cmd_sound.clone()));
-                                    // Playing sound asynchronously
-                                }
+                            if let Some(cmd_sound) = &config.cmd_sound {
+                                tokio::spawn(play_sound(cmd_sound.clone())); // Playing sound asynchronously
                             }
                             run_command(&command.command); // Running selected command
                             selected_commands.push(num); // Adding command number to selected commands
