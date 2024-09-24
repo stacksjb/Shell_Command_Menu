@@ -1,17 +1,21 @@
-mod commands; // Importing commands module from separate file
-mod config; // Importing config module from separate file
-mod edit; // Importing edit module from separate file
-mod import; // Importing import module from separate file
-mod menu; // Importing menu module from separate file
-mod utils; // Importing utils module from separate file // Importing menu module from separate file
+mod config;
+mod csv;
+mod menu;
+mod utils;
 
 fn main() {
+    // Attempt to read the Config at the default path
     let config_path = match config::get_config_file_path() {
-        Ok(path) => path, // If the function returns Ok(path), use the path
+        Ok(path) => {
+            // Print loaded successfully
+            println!("✅  Config file loaded successfully from path: {:?}", path);
+            path // Return the path
+        }
         Err(e) => {
             let _ = &eprintln!("{}", e); // Print the error message
             std::process::exit(1); // Exit if unable to get the config path
         }
     };
+    //Execute the display_menu function from the menu module with the config file
     menu::display_menu(&config_path);
 }

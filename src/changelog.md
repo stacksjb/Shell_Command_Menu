@@ -1,5 +1,8 @@
 # Changelog
 
+9.23.24
+Complete rewrite with 200% more fluff and garbage with updated config struct and additional prompts to allow for future expansion
+
 9.11.24
 Added Directories crate and updated to store commands.json in a standard location across all OS for consistent experience with running on OS per user instead of per location
 Updated dependencies
