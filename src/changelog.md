@@ -1,5 +1,8 @@
 # Changelog
 
+10.15.24
+Removed duplicate printline
+
 9.23.24
 Complete rewrite with 200% more fluff and garbage with updated config struct and additional prompts to allow for future expansion
 
