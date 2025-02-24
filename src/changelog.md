@@ -1,5 +1,8 @@
 # Changelog
 
+02.24.25
+Updated Cargo.tml and dependencies for Rust/Cargo 2024 Edition
+
 10.15.24
 Removed duplicate printline
 
