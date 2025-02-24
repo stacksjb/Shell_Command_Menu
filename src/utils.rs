@@ -39,24 +39,34 @@ pub async fn play_sound(file_path: PathBuf) {
     let file_path = file_path.clone(); // Cloning the PathBuf to be owned by the closure
     task::spawn_blocking(move || {
         // Spawning a blocking task
-        if let Ok((_stream, stream_handle)) = OutputStream::try_default() {
-            // Trying to get the default audio output stream
-            if let Ok(file) = File::open(&file_path) {
-                // Trying to open the audio file
-                if let Ok(source) = Decoder::new(BufReader::new(file)) {
-                    // Trying to decode the audio file
-                    let sink = Sink::try_new(&stream_handle).unwrap(); // Creating a sink for the audio stream
-                    sink.append(source); // Appending the audio source to the sink
-                    sink.sleep_until_end(); // Sleeping until the audio playback ends
-                } else {
-                    println!("❌ Failed to decode audio file: {:?}", file_path);
-                    // Printing error message if decoding fails
+        match OutputStream::try_default() {
+            Ok((_stream, stream_handle)) => {
+                // Trying to get the default audio output stream
+                match File::open(&file_path) {
+                    Ok(file) => {
+                        // Trying to open the audio file
+                        match Decoder::new(BufReader::new(file)) {
+                            Ok(source) => {
+                                // Trying to decode the audio file
+                                let sink = Sink::try_new(&stream_handle).unwrap(); // Creating a sink for the audio stream
+                                sink.append(source); // Appending the audio source to the sink
+                                sink.sleep_until_end(); // Sleeping until the audio playback ends
+                            }
+                            _ => {
+                                println!("❌ Failed to decode audio file: {:?}", file_path);
+                                // Printing error message if decoding fails
+                            }
+                        }
+                    }
+                    _ => {
+                        println!("❌ Failed to open audio file: {:?}", file_path);
+                        // Printing error message if file opening fails
+                    }
                 }
-            } else {
-                println!("❌ Failed to open audio file: {:?}", file_path); // Printing error message if file opening fails
             }
-        } else {
-            println!("❌ Failed to initialize audio output stream"); // Printing error message if audio stream initialization fails
+            _ => {
+                println!("❌ Failed to initialize audio output stream"); // Printing error message if audio stream initialization fails
+            }
         }
     })
     .await
