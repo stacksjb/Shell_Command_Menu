@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/"  # Location of Cargo.toml
+    schedule:
+      interval: "weekly"  # Can be "daily", "weekly", or "monthly"
+    open-pull-requests-limit: 5  # Maximum number of open PRs for updates
+    assignees:
+      - "stacksjb"  # Assign PRs to you or your team
+    labels:
+      - "dependencies"
+    ignore:
+    groups:
+      rust-dependencies:
+        patterns:
+          - "*"  # Group all Rust dependencies into one PR
+        update-types:
+          - "minor"
+          - "patch"
