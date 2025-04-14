@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 pub struct Config {
     pub commands: Vec<CommandOption>, // The commands section
     pub cmd_sound: Option<PathBuf>,   // The command sound section
+    pub window_title: Option<String>, // The window title section
 }
 
 // Define the CommandOption struct
@@ -75,6 +76,7 @@ fn default_config() -> Config {
     Config {
         commands: default_commands,
         cmd_sound: None,
+        window_title: Some("CLI_Menu".to_string()),
         // Add default values for other sections here if needed
     }
 }
@@ -120,6 +122,36 @@ pub fn edit_cmd_sound(config: &mut Config, changes_made: &mut bool) {
             "✅ cmd_sound updated to: {}",
             config.cmd_sound.as_ref().unwrap().display()
         );
+    }
+
+    *changes_made = true; // Mark changes as made
+}
+
+// Function to edit the window title
+pub fn edit_window_title(config: &mut Config, changes_made: &mut bool) {
+    // Get the current value of window_title
+    let current_title = config
+        .window_title
+        .as_ref()
+        .map_or(String::new(), |title| title.clone());
+
+    // Prompt user to enter a new window title or clear the existing one
+    println!("Current window title: {}", current_title);
+
+    let new_title = Text::new("Enter the new window title (leave empty to clear):")
+        .with_initial_value(&current_title)
+        .prompt()
+        .expect("Failed to read input");
+
+    if new_title.is_empty() {
+        config.window_title = None; // Clear the window title
+        println!("✅ Window title cleared.");
+    } else {
+        //Trim the whitespace
+        let new_title = new_title.trim();
+        // Update the window title
+        config.window_title = Some(new_title.to_string()); // Update the window title
+        println!("✅ Window title updated to: {}", new_title);
     }
 
     *changes_made = true; // Mark changes as made

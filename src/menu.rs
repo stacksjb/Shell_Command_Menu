@@ -1,5 +1,5 @@
 use crate::{
-    config::{edit_cmd_sound, save_config, validate_json, CommandOption},
+    config::{edit_cmd_sound, edit_window_title, save_config, validate_json, CommandOption},
     csv::import_commands,
     utils::{pause, play_sound, run_command},
 }; // Importing functions from utils module
@@ -18,9 +18,10 @@ use std::process::exit; // Importing exit function from std::process module
 //Function for main execution Menu
 #[tokio::main]
 pub async fn display_menu(config_path: &PathBuf) {
+    // Main function to display the menu and handle user input
     let mut selected_commands: Vec<usize> = vec![]; // Initializing vector to hold selected commands
     let mut last_selected: Option<usize> = None; // Initializing variable to hold index of last selected command
-
+                                                 // Load the COnfig
     loop {
         // Checking if the config is valid or exists; editing if not
         let config = match crate::config::load_config(config_path) {
@@ -35,6 +36,10 @@ pub async fn display_menu(config_path: &PathBuf) {
                 continue; // Continuing loop
             }
         };
+        // Set the window Title
+        if let Some(title) = &config.window_title {
+            print!("\x1b]0;{}\x07", title); // ANSI escape to set terminal title
+        }
         // Get the terminal height to set the height of the inquire prompt
         let term_height = get_terminal_height() as usize;
         let display_height = term_height.saturating_sub(3); // Adjust height to avoid overflow
@@ -172,6 +177,7 @@ pub fn edit_menu(config_path: &PathBuf) {
             "r. RESET (clear all commands)",
             "i. IMPORT from .csv",
             "s. SET sound file path",
+            "t. SET window title",
             "q. Return to Main Menu (prompt to save changes)",
         ];
         // Displaying menu and prompting user for selection
@@ -189,6 +195,7 @@ pub fn edit_menu(config_path: &PathBuf) {
                 // Setting sound file path
                 edit_cmd_sound(&mut config, &mut changes_made);
             }
+            "t. SET window title" => edit_window_title(&mut config, &mut changes_made), // Setting window title
             "i. IMPORT from .csv" => {
                 // Importing commands from CSV file
                 import_commands(&mut config, &mut changes_made);
@@ -218,6 +225,8 @@ pub fn edit_menu(config_path: &PathBuf) {
                         pause(); // Pausing execution
                     }
                 }
+
+                // Exiting loop to return to main menu
                 break; // Exiting loop
             }
             _ => println!("❌  Invalid choice, please try again."), // Handling invalid input
