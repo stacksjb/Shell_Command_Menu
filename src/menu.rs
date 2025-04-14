@@ -15,13 +15,13 @@ use textwrap::fill; // Importing fill function from textwrap crate // Importing 
                     // Importing Select prompt from inquire crate
 use std::process::exit; // Importing exit function from std::process module
 
-//Function for main execution Menu
+//Function for main execution to display Menu
 #[tokio::main]
 pub async fn display_menu(config_path: &PathBuf) {
     // Main function to display the menu and handle user input
     let mut selected_commands: Vec<usize> = vec![]; // Initializing vector to hold selected commands
     let mut last_selected: Option<usize> = None; // Initializing variable to hold index of last selected command
-                                                 // Load the COnfig
+                                                 // Load the Config
     loop {
         // Checking if the config is valid or exists; editing if not
         let config = match crate::config::load_config(config_path) {
@@ -36,14 +36,19 @@ pub async fn display_menu(config_path: &PathBuf) {
                 continue; // Continuing loop
             }
         };
-        // Set the window Title
-        if let Some(title) = &config.window_title {
-            print!("\x1b]0;{}\x07", title); // ANSI escape to set terminal title
-        }
+
         // Get the terminal height to set the height of the inquire prompt
         let term_height = get_terminal_height() as usize;
         let display_height = term_height.saturating_sub(3); // Adjust height to avoid overflow
 
+        // Set the window title supported variablet
+        let window_title_supported = config.window_title_support;
+        // If window title support is enabled, set the window title
+        if window_title_supported {
+            if let Some(title) = &config.window_title {
+                set_window_title(title); // Setting window title
+            }
+        }
         // Clear the terminal screen before displaying the menu
         clear_screen();
         // Create a list of menu options
@@ -92,9 +97,13 @@ pub async fn display_menu(config_path: &PathBuf) {
                         // Checking if index is valida
                         if let Some(command) = config.commands.get(index) {
                             // Getting command at index
-                            //If cmd_sound is set, play the sound
+                            //If cmd_sound is set, play the sound  🔊
                             if let Some(cmd_sound) = &config.cmd_sound {
                                 tokio::spawn(play_sound(cmd_sound.clone())); // Playing sound asynchronously
+                            }
+                            // If window title support is enabled, set the window title
+                            if config.window_title_support {
+                                set_window_title(&choice);
                             }
                             run_command(&command.command); // Running selected command
                             selected_commands.push(num); // Adding command number to selected commands
@@ -177,7 +186,7 @@ pub fn edit_menu(config_path: &PathBuf) {
             "r. RESET (clear all commands)",
             "i. IMPORT from .csv",
             "s. SET sound file path",
-            "t. SET window title",
+            "t. SET Window Title settings",
             "q. Return to Main Menu (prompt to save changes)",
         ];
         // Displaying menu and prompting user for selection
@@ -195,7 +204,7 @@ pub fn edit_menu(config_path: &PathBuf) {
                 // Setting sound file path
                 edit_cmd_sound(&mut config, &mut changes_made);
             }
-            "t. SET window title" => edit_window_title(&mut config, &mut changes_made), // Setting window title
+            "t. SET Window Title settings" => edit_window_title(&mut config, &mut changes_made), // Setting window title integration
             "i. IMPORT from .csv" => {
                 // Importing commands from CSV file
                 import_commands(&mut config, &mut changes_made);
@@ -380,4 +389,9 @@ pub fn clear_all_commands(config: &mut crate::config::Config, changes_made: &mut
     config.commands.clear(); // Clearing all commands
     println!("✅  All commands cleared successfully."); // Printing success message
     *changes_made = true; // Setting changes made flag
+}
+
+// Function to set window title to what is passed in
+pub fn set_window_title(title: &str) {
+    print!("\x1b]0;{}\x07", title); // ANSI escape code to set terminal title
 }
