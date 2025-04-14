@@ -17,8 +17,7 @@ Sound Effects credit Pixabay
 ## Iterm2 Usage
 
 I use this script to run my Todo list (CLI Menu) and Zoom the window, so I have it setup and mapped to a single `td` command which does the following:
-1) Runs `it2profile -s CLI_Large` (which activates a preconfigured iTerm2 profile with large text)
-2) Runs the Applescript `zoom_iterm.scpt` with `osascript zoom_iterm.scpt` - this resizes the window and moves it to the bottom of my screen
-3) Executes the CLI_Menu program
+1) Runs the Applescript `zoom_iterm.scpt` with `osascript zoom_iterm.scpt` - this script opens a new iTerm window with saved profile `CLI_large` which is a saved profile that resizes the window and moves it to the bottom of my screen automatically
+2) Executes the CLI_Menu program
 
 However, in most cases I just have iTerm reopen saved windows, so even that isn't always necessary :)
