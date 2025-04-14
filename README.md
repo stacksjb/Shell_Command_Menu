@@ -11,3 +11,14 @@ Commands are stored in a cli_menu_cmd.json JSON file located at your OS-Appropri
 Sound Effects credit Pixabay
 <https://pixabay.com/sound-effects/whoosh-6316/>
 <https://pixabay.com/sound-effects/message-incoming-132126/>
+
+
+
+## Iterm2 Usage
+
+I use this script to run my Todo list (CLI Menu) and Zoom the window, so I have it setup and mapped to a single `td` command which does the following:
+1) Runs `it2profile -s Text_Large` (which activates a preconfigured iTerm2 profile with large text)
+2) Runs the Applescript `zoom_iterm.scpt` with `osascript zoom_iterm.scpt` - this resizes the window and moves it to the bottom of my screen
+3) Executes the CLI_Menu program
+
+However, in most cases I just have iTerm reopen saved windows, so even that isn't always necessary :)
