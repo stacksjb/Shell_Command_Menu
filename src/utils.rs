@@ -10,23 +10,21 @@ use tokio::task; // Importing task module from Tokio for asynchronous task handl
 // Function to run a shell command
 /// Runs a shell command and prints the result, capturing stdout/stderr for cleaner output.
 pub fn run_command(command: &str) {
-    println!("Running command: {}", command);
+    println!("Running command: {}", command); // Printing the command being executed
+    let mut child = Command::new("sh") // Starting a new shell command
+        .arg("-c") // Passing a command to the shell
+        .arg(command) // The command to execute
+        .spawn() // Starting the command asynchronously
+        .expect("❌ Failed to execute command"); // Handling any errors
 
-    let output = Command::new("sh")
-        .arg("-c")
-        .arg(command)
-        .output()
-        .expect("❌ Failed to execute command");
+    let status = child.wait().expect("Command wasn't running"); // Waiting for the command to finish
 
-    if output.status.success() {
-        println!("✅ Command executed successfully.");
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        if !stdout.trim().is_empty() {
-            println!("{}", stdout);
-        }
+    if status.success() {
+        // Checking if the command was successful
+        println!("✅ Command executed successfully."); // Printing success message
     } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        eprintln!("\x07\x1b[31mError\x1b[0m: {}", stderr.trim());
+        println!("\x07\x1b[31mError\x1b[0m: Command returned a non-zero exit status.");
+        // Printing error message
     }
 }
 
