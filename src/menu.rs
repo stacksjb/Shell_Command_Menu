@@ -395,3 +395,62 @@ pub fn clear_all_commands(config: &mut crate::config::Config, changes_made: &mut
 pub fn set_window_title(title: &str) {
     print!("\x1b]0;{}\x07", title); // ANSI escape code to set terminal title
 }
+/// Test Cases
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_generate_menu_no_selected() {
+        let commands = vec![
+            CommandOption {
+                display_name: "List Files".into(),
+                command: "ls -la".into(),
+            },
+            CommandOption {
+                display_name: "Show Date".into(),
+                command: "date".into(),
+            },
+        ];
+        let selected = vec![];
+        let menu = generate_menu(&commands, &selected);
+        assert_eq!(menu[0], "1. List Files");
+        assert_eq!(menu[1], "2. Show Date");
+    }
+
+    #[test]
+    fn test_generate_menu_with_selected() {
+        let commands = vec![
+            CommandOption {
+                display_name: "List Files".into(),
+                command: "ls -la".into(),
+            },
+            CommandOption {
+                display_name: "Show Date".into(),
+                command: "date".into(),
+            },
+        ];
+        let selected = vec![1];
+        let menu = generate_menu(&commands, &selected);
+        assert!(menu[0].contains('\u{0336}')); // check for strike-through
+    }
+    #[test]
+    fn test_strike_through() {
+        let input = "Test";
+        let expected = "T\u{0336}e\u{0336}s\u{0336}t\u{0336}";
+        assert_eq!(strike_through(input), expected);
+    }
+    #[test]
+    fn test_clear_all_commands() {
+        let mut config = crate::config::Config {
+            commands: vec![CommandOption {
+                display_name: "Cmd1".into(),
+                command: "echo 1".into(),
+            }],
+            ..Default::default()
+        };
+        let mut changed = false;
+        clear_all_commands(&mut config, &mut changed);
+        assert!(config.commands.is_empty());
+        assert!(changed);
+    }
+}

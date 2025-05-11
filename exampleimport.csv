@@ -1,4 +1,0 @@
-﻿display_name,command
-Test command 1,"echo ""test sucessful command"""
-Command 2,a test fail command
-Command 3,"echo ""Hello"""

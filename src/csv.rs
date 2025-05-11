@@ -8,67 +8,58 @@ use std::{env, fs, path::Path}; // Importing necessary modules from standard lib
 
 // Function to import commands from CSV
 pub fn import_commands(config: &mut Config, changes_made: &mut bool) {
-    let dir = env::current_dir().unwrap_or_else(|_| ".".into()); // Getting current directory
+    let dir = env::current_dir().unwrap_or_else(|_| ".".into());
     let files = match list_csv_files(&dir) {
-        // Listing CSV files in current directory
-        Ok(files) => files, // Handling successful file listing
+        Ok(files) => files,
         Err(e) => {
-            // Handling error
-            println!("⚠️ Could not list files: {e}"); // Printing error message
-            return; // Returning from function
+            println!("⚠️ Could not list files: {e}");
+            return;
         }
     };
+
     if files.is_empty() {
-        // Checking if no files found
-        println!("⚠️ No files found in {}", dir.display()); // Printing message
-        return; // Returning from function
+        println!("⚠️ No files found in {}", dir.display());
+        return;
     }
 
-    // Prompting user to select a file to import
     let path = Select::new("Select a file to import: ", files)
         .prompt()
         .expect("Failed to display menu");
 
-    // Reading commands from the selected file
-    let mut commands = match read_commands(&path) {
-        Ok(commands) => commands, // Handling successful file reading
+    let commands = match read_commands_from_csv(&path) {
+        Ok(commands) => commands,
         Err(e) => {
-            // Handling error
             println!("❌  Could not import file: {e}");
             return;
         }
     };
 
-    // Printing the number of commands imported successfully
     let num_commands = commands.len();
     println!("Found {num_commands} commands from {path}");
     print_command_table(&commands);
 
-    // Options for appending, overwriting, or canceling import
     let menu_options = vec![
         "a. APPEND to current commands",
         "o. OVERWRITE current commands",
         "c. CANCEL import",
     ];
+
     let menu_prompt = Select::new("Select an option: ", menu_options)
         .prompt()
         .expect("❌ Failed to display menu");
 
-    match menu_prompt {
-        "a. APPEND to current commands" => {
-            // Appending imported commands to the current config
-            config.commands.append(&mut commands);
-            *changes_made = true;
-            println!("{num_commands} commands appended.");
-        }
-        "o. OVERWRITE current commands" => {
-            // Overwriting the current config with the imported commands
-            config.commands = commands;
-            *changes_made = true;
-            println!("Replaced config with {num_commands} commands from {path}");
-        }
+    let strategy = match menu_prompt {
+        "a. APPEND to current commands" => "append",
+        "o. OVERWRITE current commands" => "overwrite",
+        _ => "cancel",
+    };
+
+    merge_imported_commands(config, commands, strategy, changes_made);
+
+    match strategy {
+        "append" => println!("{num_commands} commands appended."),
+        "overwrite" => println!("Replaced config with {num_commands} commands from {path}"),
         _ => {
-            // Canceling import
             println!("❌  Canceled import");
             pause();
         }
@@ -76,12 +67,17 @@ pub fn import_commands(config: &mut Config, changes_made: &mut bool) {
 }
 
 // Function to read commands from a CSV file
-fn read_commands(path: &str) -> anyhow::Result<Vec<CommandOption>> {
-    let mut reader = csv::Reader::from_path(path)?; // Creating CSV reader
-    let mut commands = Vec::new(); // Initializing vector to hold commands
+pub(crate) fn read_commands_from_csv<P: AsRef<Path>>(
+    path: P,
+) -> anyhow::Result<Vec<CommandOption>> {
+    let mut reader = csv::Reader::from_path(path)?;
+    let mut commands = Vec::new();
+
     for result in reader.deserialize() {
-        commands.push(result?); // Pushing deserialized command to vector
+        let command: CommandOption = result?;
+        commands.push(command);
     }
+
     Ok(commands)
 }
 
@@ -102,4 +98,130 @@ fn list_csv_files(dir_path: &Path) -> anyhow::Result<Vec<String>> {
         }
     }
     Ok(files)
+}
+
+// Extracted for testable merging logic
+fn merge_imported_commands(
+    config: &mut Config,
+    mut new_commands: Vec<CommandOption>,
+    strategy: &str,
+    changes_made: &mut bool,
+) {
+    match strategy {
+        "append" => {
+            config.commands.append(&mut new_commands);
+            *changes_made = true;
+        }
+        "overwrite" => {
+            config.commands = new_commands;
+            *changes_made = true;
+        }
+        _ => {
+            *changes_made = false;
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::Config;
+
+    #[test]
+    fn test_list_csv_files_returns_csvs_only() {
+        use std::fs::{self, File};
+        use std::path::PathBuf;
+
+        let test_dir = PathBuf::from("tests/tmp_csvs");
+        let _ = fs::create_dir_all(&test_dir);
+        File::create(test_dir.join("file1.csv")).unwrap();
+        File::create(test_dir.join("file2.txt")).unwrap();
+
+        let csvs = list_csv_files(&test_dir).unwrap();
+        assert_eq!(csvs.len(), 1);
+        assert_eq!(csvs[0], "file1.csv");
+
+        fs::remove_dir_all(&test_dir).unwrap();
+    }
+    #[test]
+    fn test_merge_imported_commands_append() {
+        let mut config = Config {
+            commands: vec![CommandOption {
+                display_name: "Existing".into(),
+                command: "echo existing".into(),
+            }],
+            ..Default::default()
+        };
+        let new = vec![CommandOption {
+            display_name: "New".into(),
+            command: "echo new".into(),
+        }];
+        let mut changed = false;
+
+        merge_imported_commands(&mut config, new, "append", &mut changed);
+
+        assert_eq!(config.commands.len(), 2);
+        assert_eq!(config.commands[1].display_name, "New");
+        assert!(changed);
+    }
+
+    #[test]
+    fn test_merge_imported_commands_overwrite() {
+        let mut config = Config {
+            commands: vec![CommandOption {
+                display_name: "Old".into(),
+                command: "echo old".into(),
+            }],
+            ..Default::default()
+        };
+        let new = vec![CommandOption {
+            display_name: "Overwrite".into(),
+            command: "echo overwrite".into(),
+        }];
+        let mut changed = false;
+
+        merge_imported_commands(&mut config, new, "overwrite", &mut changed);
+
+        assert_eq!(config.commands.len(), 1);
+        assert_eq!(config.commands[0].display_name, "Overwrite");
+        assert!(changed);
+    }
+
+    #[test]
+    fn test_merge_imported_commands_cancel() {
+        let mut config = Config {
+            commands: vec![CommandOption {
+                display_name: "Keep".into(),
+                command: "echo keep".into(),
+            }],
+            ..Default::default()
+        };
+        let new = vec![CommandOption {
+            display_name: "ShouldNotAdd".into(),
+            command: "echo nope".into(),
+        }];
+        let mut changed = false;
+
+        merge_imported_commands(&mut config, new, "cancel", &mut changed);
+
+        assert_eq!(config.commands.len(), 1);
+        assert_eq!(config.commands[0].display_name, "Keep");
+        assert!(!changed);
+    }
+    #[test]
+    fn test_read_commands_from_csv_valid_csv() {
+        let path = "tests/fixtures/commands.csv"; // Must be a real file with no prompts
+        let commands = read_commands_from_csv(path).expect("Should parse CSV");
+
+        assert_eq!(commands.len(), 2);
+        assert_eq!(commands[0].display_name, "List Files");
+        assert_eq!(commands[0].command, "ls -la");
+    }
+
+    #[test]
+    fn test_read_commands_from_invalid_csv() {
+        let path = "tests/fixtures/invalid.csv"; // Create this with garbage data
+        let result = read_commands_from_csv(path);
+        assert!(result.is_err());
+    }
 }

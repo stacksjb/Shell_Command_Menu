@@ -8,22 +8,25 @@ use tokio::task; // Importing task module from Tokio for asynchronous task handl
 
 //This file contains the utility functions used in the project to run shell commands and other misc functions.
 // Function to run a shell command
+/// Runs a shell command and prints the result, capturing stdout/stderr for cleaner output.
 pub fn run_command(command: &str) {
-    println!("Running command: {}", command); // Printing the command being executed
-    let mut child = Command::new("sh") // Starting a new shell command
-        .arg("-c") // Passing a command to the shell
-        .arg(command) // The command to execute
-        .spawn() // Starting the command asynchronously
-        .expect("❌ Failed to execute command"); // Handling any errors
+    println!("Running command: {}", command);
 
-    let status = child.wait().expect("Command wasn't running"); // Waiting for the command to finish
+    let output = Command::new("sh")
+        .arg("-c")
+        .arg(command)
+        .output()
+        .expect("❌ Failed to execute command");
 
-    if status.success() {
-        // Checking if the command was successful
-        println!("✅ Command executed successfully."); // Printing success message
+    if output.status.success() {
+        println!("✅ Command executed successfully.");
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        if !stdout.trim().is_empty() {
+            println!("{}", stdout);
+        }
     } else {
-        println!("\x07\x1b[31mError\x1b[0m: Command returned a non-zero exit status.");
-        // Printing error message
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        eprintln!("\x07\x1b[31mError\x1b[0m: {}", stderr.trim());
     }
 }
 
@@ -71,4 +74,57 @@ pub async fn play_sound(file_path: PathBuf) {
     })
     .await
     .unwrap(); // Waiting for the task to finish and handling any errors
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serial_test::serial;
+    // Importing serial_test crate for running tests serially for command execution tests
+
+    #[test]
+    #[serial]
+    fn test_run_command_success() {
+        run_command("echo 'Hello'");
+        println!();
+    }
+
+    #[test]
+    #[serial]
+    fn test_run_command_failure() {
+        run_command("non_existent_command_hopefully");
+        println!();
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_play_sound() {
+        let sound_path = PathBuf::from("path/to/sound/file.wav");
+        play_sound(sound_path).await;
+        println!();
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_play_sound_invalid() {
+        let sound_path = PathBuf::from("invalid/path/to/sound/file.wav");
+        play_sound(sound_path).await;
+        println!();
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_play_sound_invalid_path() {
+        let fake_path = PathBuf::from("nonexistent_audio_file.mp3");
+        play_sound(fake_path).await;
+        println!();
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_play_sound_valid_file() {
+        let path = PathBuf::from("assets/silence.wav"); // Blank Sound File for testing
+        play_sound(path).await;
+        println!();
+    }
 }

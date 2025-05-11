@@ -152,3 +152,56 @@ pub fn edit_window_title(config: &mut Config, changes_made: &mut bool) {
 
     *changes_made = true;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_config_default_is_empty() {
+        let config = Config::default();
+        assert!(config.commands.is_empty());
+        assert!(config.cmd_sound.is_none());
+        assert!(!config.window_title_support);
+        assert!(config.window_title.is_none());
+    }
+
+    #[test]
+    fn test_save_and_load_config_roundtrip() {
+        use std::fs;
+        use tempfile::NamedTempFile;
+
+        let file = NamedTempFile::new().unwrap();
+        let path = file.path().to_path_buf();
+
+        let original = Config {
+            commands: vec![CommandOption {
+                display_name: "Test".into(),
+                command: "echo test".into(),
+            }],
+            cmd_sound: Some("sound.mp3".into()),
+            window_title_support: true,
+            window_title: Some("My CLI Menu".into()),
+        };
+
+        save_config(&path, &original);
+
+        let loaded = load_config(&path).expect("Should load config");
+        assert_eq!(original.commands.len(), loaded.commands.len());
+        assert_eq!(original.cmd_sound, loaded.cmd_sound);
+        assert_eq!(original.window_title, loaded.window_title);
+        assert_eq!(original.window_title_support, loaded.window_title_support);
+
+        fs::remove_file(path).unwrap();
+    }
+    #[test]
+    fn test_validate_json_returns_true_for_valid_config() {
+        let config = Config::default();
+        assert!(validate_json(&config));
+    }
+    #[test]
+    fn test_get_config_file_path_returns_path() {
+        let path = get_config_file_path().expect("Should return a config path");
+        assert!(path.ends_with("cli_menu_cmd.json"));
+    }
+}
