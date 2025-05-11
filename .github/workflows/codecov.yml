@@ -35,7 +35,9 @@ jobs:
             -o coverage.xml
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: stacksjb/Shell_Command_Menu
           files: coverage.xml
           fail_ci_if_error: true
