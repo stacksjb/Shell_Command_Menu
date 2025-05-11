@@ -1,18 +1,18 @@
 use crate::{
-    config::{edit_cmd_sound, edit_window_title, save_config, validate_json, CommandOption},
+    config::{CommandOption, edit_cmd_sound, edit_window_title, save_config, validate_json},
     csv::import_commands,
     utils::{pause, play_sound, run_command},
 }; // Importing functions from utils module
 use inquire::Select;
-use prettytable::{row, Cell, Row, Table}; // Importing types for creating tables
+use prettytable::{Cell, Row, Table, row}; // Importing types for creating tables
 use std::{
-    io::{stdout, Write},
+    io::{Write, stdout},
     path::PathBuf,
     process,
 };
 use termion::{clear, cursor, terminal_size};
 use textwrap::fill; // Importing fill function from textwrap crate // Importing IntoRawMode trait for entering raw mode
-                    // Importing Select prompt from inquire crate
+// Importing Select prompt from inquire crate
 use std::process::exit; // Importing exit function from std::process module
 
 //Function for main execution to display Menu
@@ -21,7 +21,7 @@ pub async fn display_menu(config_path: &PathBuf) {
     // Main function to display the menu and handle user input
     let mut selected_commands: Vec<usize> = vec![]; // Initializing vector to hold selected commands
     let mut last_selected: Option<usize> = None; // Initializing variable to hold index of last selected command
-                                                 // Load the Config
+    // Load the Config
     loop {
         // Checking if the config is valid or exists; editing if not
         let config = match crate::config::load_config(config_path) {

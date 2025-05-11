@@ -1,6 +1,6 @@
 use rodio::{Decoder, OutputStream, Sink};
 use std::fs::File;
-use std::io::{stdin, stdout, BufReader, Write};
+use std::io::{BufReader, Write, stdin, stdout};
 use std::path::PathBuf;
 use std::process::Command; // Importing Command struct for executing shell commands // Importing types for audio playback
 use termion::{input::TermRead, raw::IntoRawMode}; // Importing IntoRawMode trait for entering raw mode
