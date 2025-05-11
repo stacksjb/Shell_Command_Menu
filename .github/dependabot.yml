@@ -9,7 +9,7 @@ updates:
       - stacksjb  # Assign PRs to you or your team
     labels:
       - "dependencies"
-    ignore:
+    ignore: []
     groups:
       rust-dependencies:
         patterns:
