@@ -20,4 +20,6 @@ I use this script to run my Todo list (CLI Menu) and Zoom the window, so I have 
 1) Runs the Applescript `zoom_iterm.scpt` with `osascript zoom_iterm.scpt` - this script opens a new iTerm window with saved profile `CLI_Large` which is a saved profile that resizes the window and moves it to the bottom of my screen automatically
 2) Executes the CLI_Menu program
 
+You can configure custom window position/size in here if needed but it's not necessary as iTerm saves profile window locations for me.
+
 However, in most cases I just have iTerm reopen saved windows, so even that isn't always necessary :)
