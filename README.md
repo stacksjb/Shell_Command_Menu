@@ -1,4 +1,4 @@
-# Shell_Command_Menu (aka CLI_Menu)
+# Shell_Command_Menu (aka CLI_Menu) :)
 
 A simple Rust App to run stored shell commands from a config (Commands.json) file via a menu with options.
 
@@ -12,11 +12,10 @@ Sound Effects credit Pixabay
 <https://pixabay.com/sound-effects/whoosh-6316/>
 <https://pixabay.com/sound-effects/message-incoming-132126/>
 
-
-
 ## Iterm2 Usage
 
 I use this script to run my Todo list (CLI Menu) and Zoom the window, so I have it setup and mapped to a single `td` command which does the following:
+
 1) Runs the Applescript `zoom_iterm.scpt` with `osascript zoom_iterm.scpt` - this script opens a new iTerm window with saved profile `CLI_Large` which is a saved profile that resizes the window and moves it to the bottom of my screen automatically
 2) Executes the CLI_Menu program
 
