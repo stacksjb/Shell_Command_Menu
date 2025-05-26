@@ -18,6 +18,12 @@ jobs:
     # Set up Rust toolchain
     - name: Set up Rust toolchain
       uses: dtolnay/rust-toolchain@stable  # Set up the Rust toolchain
+    # Install Linux dependencies (for alsa-sys and other potential native dependencies)
+    - name: Install Linux ALSA dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libasound2-dev  # Install ALSA development libraries
+        sudo apt-get install -y pkg-config      # Ensure pkg-config is installed
 
     # Install dependencies (this step is just to ensure the release build works)
     - name: Install dependencies
