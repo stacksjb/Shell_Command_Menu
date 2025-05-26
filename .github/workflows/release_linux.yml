@@ -26,11 +26,6 @@ jobs:
         sudo apt-get install -y libasound2-dev  # Install ALSA development libraries
         sudo apt-get install -y pkg-config      # Ensure pkg-config is installed
 
-    # Install dependencies (this step is just to ensure the release build works)
-    - name: Install dependencies
-      run: |
-        cargo build --release
-
     # Build for Linux (this is where the actual build for the target is done)
     - name: Build for Linux
       run: |
@@ -50,5 +45,5 @@ jobs:
     - name: Upload binaries to GitHub release
       uses: softprops/action-gh-release@v2.2.2  # Use the updated version of gh-release
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}  # GitHub token for authentication
+        token: ${{ secrets.GH_PAT_CLI_MENU }}  # GitHub token for authentication
         files: target/release/binaries/*  # Upload all files in the binaries folder
