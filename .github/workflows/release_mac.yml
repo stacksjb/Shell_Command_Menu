@@ -19,6 +19,13 @@ jobs:
     - name: Set up Rust toolchain
       uses: dtolnay/rust-toolchain@stable  # Set up the Rust toolchain
 
+    # Install macOS targets using rustup
+    - name: Add macOS targets
+      run: |
+        rustup target add x86_64-apple-darwin  # Add macOS Intel target
+        rustup target add aarch64-apple-darwin  # Add macOS ARM target
+
+
     # Build for macOS Intel (x86_64)
     - name: Build for macOS Intel
       run: |
