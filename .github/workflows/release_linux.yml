@@ -18,6 +18,7 @@ jobs:
     # Set up Rust toolchain
     - name: Set up Rust toolchain
       uses: dtolnay/rust-toolchain@stable  # Set up the Rust toolchain
+      
     # Install Linux dependencies (for alsa-sys and other potential native dependencies)
     - name: Install Linux ALSA dependencies
       run: |
