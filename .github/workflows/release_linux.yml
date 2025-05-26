@@ -41,7 +41,7 @@ jobs:
 
     # Upload the binaries to the GitHub release
     - name: Upload binaries to GitHub release
-      uses: gh-action/gh-release@v2  # Use the updated version of gh-release
+      uses: softprops/action-gh-release@v2.2.2  # Use the updated version of gh-release
       with:
         token: ${{ secrets.GITHUB_TOKEN }}  # GitHub token for authentication
         files: target/release/binaries/*  # Upload all files in the binaries folder
