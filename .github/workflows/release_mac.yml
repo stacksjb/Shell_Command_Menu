@@ -1,0 +1,66 @@
+name: Release Binaries (macOS)
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on tags starting with "v" (e.g., v1.0.0)
+
+jobs:
+  build-macos:
+    name: Build and Release macOS Binaries
+    runs-on: macos-latest  # The job will run on a macOS runner
+
+    steps:
+    # Checkout the repository
+    - name: Checkout repository
+      uses: actions/checkout@v4  # Correct use of 'uses' within steps
+
+    # Set up Rust toolchain
+    - name: Set up Rust toolchain
+      uses: dtolnay/rust-toolchain@stable  # Set up the Rust toolchain
+
+    # Build for macOS Intel (x86_64)
+    - name: Build for macOS Intel
+      run: |
+        cargo build --release --target x86_64-apple-darwin
+
+    # Build for macOS ARM (aarch64)
+    - name: Build for macOS ARM
+      run: |
+        cargo build --release --target aarch64-apple-darwin
+
+    # Create the binaries directory if it doesn't exist
+    - name: Create release binaries directory
+      run: |
+        mkdir -p target/release/binaries
+
+    # Copy the macOS Intel binary into the binaries directory
+    - name: Copy macOS Intel binary
+      run: |
+        cp target/x86_64-apple-darwin/release/shell_command_menu target/release/binaries/shell_command_menu_intel
+
+    # Copy the macOS ARM binary into the binaries directory
+    - name: Copy macOS ARM binary
+      run: |
+        cp target/aarch64-apple-darwin/release/shell_command_menu target/release/binaries/shell_command_menu_arm
+
+    # Zip and rename the Intel binary
+    - name: Zip and rename the macOS Intel binary
+      run: |
+        cd target/release/binaries
+        tar -czf shell_command_menu_macos_intel.tgz shell_command_menu_intel  # Create a .tgz archive for Intel
+
+    # Zip and rename the ARM binary
+    - name: Zip and rename the macOS ARM binary
+      run: |
+        cd target/release/binaries
+        tar -czf shell_command_menu_macos_arm.tgz shell_command_menu_arm  # Create a .tgz archive for ARM
+
+    # Upload the binaries to the GitHub release
+    - name: Upload binaries to GitHub release
+      uses: softprops/action-gh-release@v2.2.2  # Use the updated version of gh-release
+      with:
+        token: ${{ secrets.GH_PAT_CLI_MENU }}  # GitHub token for authentication
+        files: |
+          target/release/binaries/shell_command_menu_macos_intel.tgz  # Upload the Intel .tgz file
+          target/release/binaries/shell_command_menu_macos_arm.tgz  # Upload the ARM .tgz file
