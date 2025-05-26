@@ -34,7 +34,7 @@ jobs:
         cp target/x86_64-unknown-linux-gnu/release/shell_command_menu target/release/binaries/  # Copy the binary
 
     - name: Upload binaries to GitHub release
-      uses: gh-action/gh-release@v1
+    uses: softprops/action-gh-release@v2.2.2
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         files: target/release/binaries/*  # Upload all files from the binaries folder
