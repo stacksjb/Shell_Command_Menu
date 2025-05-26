@@ -8,33 +8,40 @@ on:
 jobs:
   build-linux:
     name: Build and Release Linux Binary
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # The job will run on an Ubuntu runner
 
     steps:
+    # Checkout the repository
     - name: Checkout repository
-      uses: actions/checkout@v4  # Use actions/checkout@v4 as per your example
+      uses: actions/checkout@v4  # Correct use of 'uses' within steps
 
+    # Set up Rust toolchain
     - name: Set up Rust toolchain
-      uses: dtolnay/rust-toolchain@stable  # Set up Rust toolchain to use stable version
+      uses: dtolnay/rust-toolchain@stable  # Set up the Rust toolchain
 
+    # Install dependencies (this step is just to ensure the release build works)
     - name: Install dependencies
       run: |
         cargo build --release
 
+    # Build for Linux (this is where the actual build for the target is done)
     - name: Build for Linux
       run: |
         cargo build --release --target x86_64-unknown-linux-gnu
 
+    # Create the binaries directory if it doesn't exist
     - name: Create release binaries directory
       run: |
-        mkdir -p target/release/binaries  # Create the binaries directory if it doesn't exist
+        mkdir -p target/release/binaries
 
+    # Copy the built binary into the binaries directory
     - name: Copy Linux binary
       run: |
-        cp target/x86_64-unknown-linux-gnu/release/shell_command_menu target/release/binaries/  # Copy the binary
+        cp target/x86_64-unknown-linux-gnu/release/shell_command_menu target/release/binaries/
 
+    # Upload the binaries to the GitHub release
     - name: Upload binaries to GitHub release
-    uses: softprops/action-gh-release@v2.2.2
+      uses: gh-action/gh-release@v2  # Use the updated version of gh-release
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        files: target/release/binaries/*  # Upload all files from the binaries folder
+        token: ${{ secrets.GITHUB_TOKEN }}  # GitHub token for authentication
+        files: target/release/binaries/*  # Upload all files in the binaries folder
