@@ -7,16 +7,15 @@ on:
 
 jobs:
   build-linux:
+    name: Build and Release Linux Binary
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4  # Use actions/checkout@v4 as per your example
 
-    - name: Set up Rust
-      uses: actions/setup-rust@v1
-      with:
-        rust-version: 'stable'
+    - name: Set up Rust toolchain
+      uses: dtolnay/rust-toolchain@stable  # Set up Rust toolchain to use stable version
 
     - name: Install dependencies
       run: |
