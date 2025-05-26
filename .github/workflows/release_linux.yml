@@ -36,14 +36,14 @@ jobs:
       run: |
         mkdir -p target/release/binaries
 
-    # Copy the built binary into the binaries directory
-    - name: Copy Linux binary
+    - name: Zip and rename the binary
       run: |
-        cp target/x86_64-unknown-linux-gnu/release/shell_command_menu target/release/binaries/
+        cd target/release/binaries
+        tar -czf shell_command_menu_linux.tgz shell_command_menu  # Create a .tgz archive of the binary
 
     # Upload the binaries to the GitHub release
     - name: Upload binaries to GitHub release
       uses: softprops/action-gh-release@v2.2.2  # Use the updated version of gh-release
       with:
         token: ${{ secrets.GH_PAT_CLI_MENU }}  # GitHub token for authentication
-        files: target/release/binaries/*  # Upload all files in the binaries folder
+        files: target/release/binaries/shell_command_menu_linux.tgz  # Upload the .tgz file
