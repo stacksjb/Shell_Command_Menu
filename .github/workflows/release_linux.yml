@@ -1,0 +1,41 @@
+name: Release Binaries (Linux)
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on tags starting with "v" (e.g., v1.0.0)
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Rust
+      uses: actions/setup-rust@v1
+      with:
+        rust-version: 'stable'
+
+    - name: Install dependencies
+      run: |
+        cargo build --release
+
+    - name: Build for Linux
+      run: |
+        cargo build --release --target x86_64-unknown-linux-gnu
+
+    - name: Create release binaries directory
+      run: |
+        mkdir -p target/release/binaries  # Create the binaries directory if it doesn't exist
+
+    - name: Copy Linux binary
+      run: |
+        cp target/x86_64-unknown-linux-gnu/release/shell_command_menu target/release/binaries/  # Copy the binary
+
+    - name: Upload binaries to GitHub release
+      uses: gh-action/gh-release@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        files: target/release/binaries/*  # Upload all files from the binaries folder
