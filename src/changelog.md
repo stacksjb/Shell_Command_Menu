@@ -1,5 +1,8 @@
 # Changelog
 
+05/26/25
+Test Autobuild for Linux
+
 05/11/25
 Updated Cargo.tml and dependencies for Rust/Cargo 2024 Edition
 Added testcases
