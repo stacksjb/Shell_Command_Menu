@@ -35,6 +35,12 @@ jobs:
     - name: Create release binaries directory
       run: |
         mkdir -p target/release/binaries
+    
+    # Copy the built binary into the binaries directory
+    - name: Copy Linux binary
+      run: |
+        cp target/x86_64-unknown-linux-gnu/release/shell_command_menu target/release/binaries/
+
 
     - name: Zip and rename the binary
       run: |
