@@ -1,7 +1,7 @@
 use crate::{
     config::{CommandOption, edit_cmd_sound, edit_window_title, save_config, validate_json},
     csv::import_commands,
-    utils::{pause, play_sound, run_command},
+    utils::{get_version, pause, play_sound, run_command},
 }; // Importing functions from utils module
 use inquire::Select;
 use prettytable::{Cell, Row, Table, row}; // Importing types for creating tables
@@ -79,7 +79,7 @@ pub async fn display_menu(config_path: &PathBuf) {
             Ok(choice) => {
                 if choice == "q. EXIT" {
                     // Checking if user chose to exit
-                    println!("Exiting..."); // Printing exit message
+                    println!("Exiting CLI Menu v{}...", get_version()); // Printing exit message
                     exit(0); // Exiting program
                 } else if choice == "e. EDIT Commands" {
                     // Checking if user chose to edit commands

@@ -74,6 +74,11 @@ pub async fn play_sound(file_path: PathBuf) {
     .unwrap(); // Waiting for the task to finish and handling any errors
 }
 
+// Function to return the current version
+pub fn get_version() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
