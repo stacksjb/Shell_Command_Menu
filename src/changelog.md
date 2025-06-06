@@ -1,7 +1,10 @@
 # Changelog
 
+6/6/25 - v0.2.4
+Addded "reorder" option for menu config.
+
 05/26/25
-Adding tests and codecov for future cleanup/implementation.
+Adding tests and codecov for future cleanup/implementation - not yet active.
 
 05/11/25
 Updated Cargo.tml and dependencies for Rust/Cargo 2024 Edition

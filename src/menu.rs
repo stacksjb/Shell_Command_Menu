@@ -182,6 +182,7 @@ pub fn edit_menu(config_path: &PathBuf) {
         let menu_options = vec![
             "a. ADD a new command",
             "e. EDIT a command",
+            "o. REORDER a command",
             "d. DELETE a command",
             "r. RESET (clear all commands)",
             "i. IMPORT from .csv",
@@ -198,6 +199,7 @@ pub fn edit_menu(config_path: &PathBuf) {
         match menu_prompt {
             "a. ADD a new command" => add_command(&mut config, &mut changes_made), // Adding a new command
             "e. EDIT a command" => edit_command(&mut config, &mut changes_made), // Editing an existing command
+            "o. REORDER a command" => reorder_command(&mut config, &mut changes_made), // Reordering a command
             "d. DELETE a command" => delete_command(&mut config, &mut changes_made), // Deleting a command
             "r. RESET (clear all commands)" => clear_all_commands(&mut config, &mut changes_made), // Clearing all commands
             "s. SET sound file path" => {
@@ -312,6 +314,60 @@ pub fn edit_command(config: &mut crate::config::Config, changes_made: &mut bool)
     };
 
     *changes_made = true; // Setting changes made flag
+}
+
+pub fn reorder_command(config: &mut crate::config::Config, changes_made: &mut bool) {
+    let num_commands = config.commands.len(); // Getting the number of commands
+    if num_commands == 0 {
+        // Checking if there are no commands
+        println!("❌  No commands to reorder. Please add a command first."); // Printing error message
+        return; // Returning from the function
+    }
+
+    // Creating a list of command display names for selection
+    let command_names: Vec<String> = config
+        .commands
+        .iter()
+        .enumerate()
+        .map(|(i, cmd)| format!("{}. {}", i + 1, cmd.display_name))
+        .collect();
+
+    // Prompting user to select a command to reorder
+    let command_index = Select::new("Select a command to reorder:", command_names)
+        .prompt()
+        .expect("Failed to display menu");
+
+    // Find the index of the selected command by parsing the number from the string
+    let command_number = command_index
+        .split('.')
+        .next()
+        .unwrap()
+        .parse::<usize>()
+        .unwrap()
+        - 1;
+
+    // Prompting user to input the new position for the selected command
+    let new_position: usize = inquire::Text::new("Enter the new position for this command:")
+        .with_help_message("Enter a number between 1 and the number of commands.")
+        .prompt()
+        .expect("Failed to get new position")
+        .parse()
+        .unwrap_or(command_number + 1); // Default to current position if invalid input is entered
+
+    // Checking if the position is within a valid range
+    if new_position > 0 && new_position <= num_commands {
+        // Move the command to the new position
+        let command_to_move = config.commands.remove(command_number); // Remove the command from the original position
+        config.commands.insert(new_position - 1, command_to_move); // Insert the command at the new position
+
+        println!("✅  Command moved to position {}.", new_position);
+        *changes_made = true; // Mark that changes were made
+    } else {
+        println!(
+            "❌  Invalid position. Please enter a number between 1 and {}.",
+            num_commands
+        );
+    }
 }
 
 //Delete Command Function
