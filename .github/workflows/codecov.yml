@@ -21,7 +21,7 @@ jobs:
 
       - name: Build and test
         run: cargo test --workspace --all-targets
-      
+
       - name: Checkout code
         uses: actions/checkout@v3
 
