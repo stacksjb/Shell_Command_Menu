@@ -1,7 +1,7 @@
-use std::fs::{self, File};
-use std::process::{Command, exit};
-use std::io::{self, Write};
 use serde::{Deserialize, Serialize};
+use std::fs::{self, File};
+use std::io::{self, Write};
+use std::process::{Command, exit};
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 
@@ -91,15 +91,18 @@ fn run_command(command: &str) {
 }
 
 fn create_default_config(path: &str) {
-    let default_commands = vec![
-        ("default_option".to_string(), "echo 'Default command'".to_string())
-    ];
+    let default_commands = vec![(
+        "default_option".to_string(),
+        "echo 'Default command'".to_string(),
+    )];
 
     let default_config = Config {
         commands: default_commands,
     };
 
-    let config_data = serde_json::to_string_pretty(&default_config).expect("Failed to serialize default config");
+    let config_data =
+        serde_json::to_string_pretty(&default_config).expect("Failed to serialize default config");
     let mut file = File::create(path).expect("Unable to create config file");
-    file.write_all(config_data.as_bytes()).expect("Unable to write to config file");
+    file.write_all(config_data.as_bytes())
+        .expect("Unable to write to config file");
 }
