@@ -2,6 +2,7 @@
 
 6/6/25 - v0.2.4
 Addded "reorder" option for menu config.
+Split out edit to another module and rewrote for error handling of escape/cntrl-C.
 
 05/26/25
 Adding tests and codecov for future cleanup/implementation - not yet active.

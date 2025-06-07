@@ -1,6 +1,6 @@
 use crate::{
     config::{CommandOption, Config}, // Importing Config struct
-    menu::print_command_table,
+    menu_edit::print_commands,
     utils::pause,
 };
 use inquire::Select; // Importing Select prompt from inquire crate
@@ -36,7 +36,7 @@ pub fn import_commands(config: &mut Config, changes_made: &mut bool) {
 
     let num_commands = commands.len();
     println!("Found {num_commands} commands from {path}");
-    print_command_table(&commands);
+    print_commands(&commands);
 
     let menu_options = vec![
         "a. APPEND to current commands",

@@ -1,6 +1,7 @@
 mod config;
 mod csv;
-mod menu;
+mod menu_edit;
+mod menu_main;
 mod utils;
 
 fn main() {
@@ -18,5 +19,5 @@ fn main() {
         }
     };
     //Execute the display_menu function from the menu module with the config file from previous function
-    menu::display_menu(&config_path);
+    menu_main::display_menu(&config_path);
 }
