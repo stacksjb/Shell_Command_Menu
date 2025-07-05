@@ -10,7 +10,7 @@ use tokio::task; // Importing task module from Tokio for asynchronous task handl
 // Function to run a shell command
 /// Runs a shell command and prints the result, capturing stdout/stderr for cleaner output.
 pub fn run_command(command: &str) {
-    println!("Running command: {}", command); // Printing the command being executed
+    println!("Running command: {command}"); // Printing the command being executed
     let mut child = Command::new("sh") // Starting a new shell command
         .arg("-c") // Passing a command to the shell
         .arg(command) // The command to execute
@@ -54,13 +54,13 @@ pub async fn play_sound(file_path: PathBuf) {
                                 sink.sleep_until_end(); // Sleeping until the audio playback ends
                             }
                             _ => {
-                                println!("❌ Failed to decode audio file: {:?}", file_path);
+                                println!("❌ Failed to decode audio file: {file_path:?}");
                                 // Printing error message if decoding fails
                             }
                         }
                     }
                     _ => {
-                        println!("❌ Failed to open audio file: {:?}", file_path);
+                        println!("❌ Failed to open audio file: {file_path:?}");
                         // Printing error message if file opening fails
                     }
                 }

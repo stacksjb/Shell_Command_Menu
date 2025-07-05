@@ -12,7 +12,7 @@ use textwrap::fill;
 
 pub fn edit_menu(config_path: &PathBuf) {
     let mut config = crate::config::load_config(config_path).unwrap_or_else(|e| {
-        eprintln!("Error: {}", e);
+        eprintln!("Error: {e}");
         process::exit(1);
     });
     let _original_config = config.clone();
@@ -206,7 +206,7 @@ pub fn reorder_command(config: &mut Config, changes_made: &mut bool) {
     if new_position > 0 && new_position <= config.commands.len() {
         let command_to_move = config.commands.remove(command_number);
         config.commands.insert(new_position - 1, command_to_move);
-        println!("✅  Command moved to position {}.", new_position);
+        println!("✅  Command moved to position {new_position}.");
         *changes_made = true;
     } else {
         println!(

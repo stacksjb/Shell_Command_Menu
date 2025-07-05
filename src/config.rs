@@ -34,22 +34,16 @@ pub(crate) fn get_config_file_path() -> Result<PathBuf, String> {
     if config_file.exists() {
         // Load the config for validation
         let config = crate::config::load_config(&config_file)
-            .map_err(|e| format!("Failed to load config for validation: {}", e))?;
+            .map_err(|e| format!("Failed to load config for validation: {e}"))?;
 
         // Validate the JSON structure
         if validate_json(&config) {
-            println!(
-                "✅  Config file loaded successfully from path: {:?}",
-                config_file
-            );
+            println!("✅  Config file loaded successfully from path: {config_file:?}");
         }
     } else {
-        println!(
-            "⚠️  Config file not found. Creating new default config at: {:?}",
-            config_file
-        );
+        println!("⚠️  Config file not found. Creating new default config at: {config_file:?}");
         create_default_config(&config_file)
-            .map_err(|e| format!("Failed to create default config file: {}", e))?;
+            .map_err(|e| format!("Failed to create default config file: {e}"))?;
     }
 
     Ok(config_file)
@@ -66,7 +60,7 @@ pub fn load_config(path: &PathBuf) -> anyhow::Result<Config> {
 // Save the entire configuration (including commands and other sections) to a file.
 pub fn save_config(path: &Path, config: &Config) {
     let config_data = serde_json::to_string_pretty(config).expect("❌  Failed to serialize config");
-    let mut file = File::create(path).expect("❌  Unable to create config file");
+    let mut file = File::create(path).expect("❌  Unable to create config file ");
     // Write the serialized config data to the file
     file.write_all(config_data.as_bytes())
         .expect("❌  Unable to write to config file");
@@ -92,7 +86,7 @@ pub fn edit_cmd_sound(config: &mut Config, changes_made: &mut bool) {
         .as_ref()
         .map_or(String::new(), |path| path.display().to_string());
 
-    println!("Current sound file: {}", current_sound);
+    println!("Current sound file: {current_sound}");
 
     let sound_path = Text::new("Enter the new path for cmd_sound (leave empty to clear):")
         .with_initial_value(&current_sound)
@@ -134,7 +128,7 @@ pub fn edit_window_title(config: &mut Config, changes_made: &mut bool) {
         .as_ref()
         .map_or(String::new(), |title| title.clone());
 
-    println!("Current window title: {}", current_title);
+    println!("Current window title: {current_title}");
 
     let new_title = Text::new("Enter the new window title (leave empty to clear):")
         .with_initial_value(&current_title)
@@ -147,7 +141,7 @@ pub fn edit_window_title(config: &mut Config, changes_made: &mut bool) {
     } else {
         let new_title = new_title.trim();
         config.window_title = Some(new_title.to_string());
-        println!("✅ Window title updated to: {}", new_title);
+        println!("✅ Window title updated to: {new_title}");
     }
 
     *changes_made = true;

@@ -120,7 +120,7 @@ pub fn generate_menu(commands: &[CommandOption], selected_commands: &[usize]) ->
         .enumerate()
         .map(|(index, cmd)| {
             let number = index + 1;
-            let padded_number = format!("{: >width$}", number, width = max_number_width);
+            let padded_number = format!("{number: >max_number_width$}");
             if selected_commands.contains(&number) {
                 format!("{}. {}", padded_number, strike_through(&cmd.display_name))
             } else {
@@ -150,5 +150,5 @@ fn strike_through(text: &str) -> String {
 }
 
 pub fn set_window_title(title: &str) {
-    print!("\x1b]0;{}\x07", title);
+    print!("\x1b]0;{title}\x07");
 }
