@@ -1,5 +1,8 @@
 # Changelog
 
+7/4/25
+Updated formatting for Rust 1.88 and Clippy
+
 6/6/25 - v0.2.4
 Addded "reorder" option for menu config.
 Split out edit to another module and rewrote for error handling of escape/cntrl-C.
