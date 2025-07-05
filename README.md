@@ -2,15 +2,21 @@
 
 A simple Rust App to run stored shell commands from a config (Commands.json) file via a menu with options.
 
-This is a simple app I used ChatGPT to write to help learn Rust and also to give me a framework for my daily CLI workflow. It tracks completion of each command and execution.
+This is a simple app I wrote to help learn Rust and also to give me a framework for my daily CLI workflow. It tracks completion of each command and execution.
 
 Commands are stored in a cli_menu_cmd.json JSON file located at your OS-Appropriate data folder using rust Directories config_dir(<https://docs.rs/directories/latest/directories/struct.BaseDirs.html>)
 
-*Most of the credit goes to ChatGPT which wrote most of the code. Thanks to @Scott Pack for his talk at BSides 2023 (<https://www.youtube.com/watch?v=b_pkz4kDfq0>) which helped set the stage
+*Most of the initial credit goes to ChatGPT which wrote most of the code. Thanks to @Scott Pack for his talk at BSides 2023 (<https://www.youtube.com/watch?v=b_pkz4kDfq0>) which helped set the stage
 
 Sound Effects credit Pixabay
 <https://pixabay.com/sound-effects/whoosh-6316/>
 <https://pixabay.com/sound-effects/message-incoming-132126/>
+
+## Example of my daily Usage with [Tod](https://github.com/alanvardy/tod)
+
+I have each of my daily [task contexts](https://gettingthingsdone.com/2010/09/david-allen-on-why-sorting-your-lists-by-contexts-even-matters/#:~:text=There%20is%20never%20a%20moment,you%20simply%20can't%20do.&text=Some%20suggested%20contexts%20to%20get,for%20Projects%20and%20Someday%20Maybe) grouped into a query command, that I then work through one at a time, starting from the top, as a daily routie.
+
+![image](https://github.com/user-attachments/assets/7631747a-ad86-4100-82ef-584372a32006)
 
 ## Iterm2 Usage
 
