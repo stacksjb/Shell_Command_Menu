@@ -25,7 +25,7 @@ pub struct CommandOption {
 }
 
 // Function to get the path of the config file; else create it
-pub(crate) fn get_config_file_path() -> Result<PathBuf, String> {
+pub fn get_config_file_path() -> Result<PathBuf, String> {
     let base_dirs = BaseDirs::new().ok_or("Could not get base directories")?;
 
     // Get the config directory and append the file name

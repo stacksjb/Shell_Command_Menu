@@ -67,9 +67,7 @@ pub fn import_commands(config: &mut Config, changes_made: &mut bool) {
 }
 
 // Function to read commands from a CSV file
-pub(crate) fn read_commands_from_csv<P: AsRef<Path>>(
-    path: P,
-) -> anyhow::Result<Vec<CommandOption>> {
+pub fn read_commands_from_csv<P: AsRef<Path>>(path: P) -> anyhow::Result<Vec<CommandOption>> {
     let mut reader = csv::Reader::from_path(path)?;
     let mut commands = Vec::new();
 

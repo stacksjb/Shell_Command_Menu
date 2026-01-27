@@ -1,12 +1,8 @@
-mod config;
-mod csv;
-mod menu_edit;
-mod menu_main;
-mod utils;
+use shell_command_menu::{config, menu_main, utils};
 
 fn main() {
     // Print the version
-    let version = crate::utils::get_version();
+    let version = utils::get_version();
     println!("Welcome to CLI_Menu v{version}!");
     // Execute the config::get_config_file_path function to get the config file path and load it; else create it
     let config_path = match config::get_config_file_path() {
