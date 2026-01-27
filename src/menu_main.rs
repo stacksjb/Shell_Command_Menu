@@ -48,10 +48,10 @@ pub async fn display_menu(config_path: &PathBuf) {
         let term_height = get_terminal_height() as usize;
         let display_height = term_height.saturating_sub(3);
 
-        if config.window_title_support {
-            if let Some(title) = &config.window_title {
-                set_window_title(title);
-            }
+        if config.window_title_support
+            && let Some(title) = &config.window_title
+        {
+            set_window_title(title);
         }
 
         clear_screen();
