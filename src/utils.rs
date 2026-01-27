@@ -42,8 +42,9 @@ pub async fn play_sound(file_path: PathBuf) {
         // Spawning a blocking task
 
         match OutputStreamBuilder::open_default_stream() {
-            Ok(stream_handle) => {
+            Ok(mut stream_handle) => {
                 // Trying to get the default audio output stream
+                stream_handle.log_on_drop(false); // Set log_on_drop to false
                 match File::open(&file_path) {
                     Ok(file) => {
                         // Trying to open the audio file

@@ -1,5 +1,8 @@
 # Changelog
 
+1/27/26 - v0.2.5
+Updated to latest rodio; code cleanup; added test cases
+
 7/4/25
 Updated formatting for Rust 1.88 and Clippy
 

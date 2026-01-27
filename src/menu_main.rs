@@ -92,7 +92,7 @@ pub async fn display_menu(config_path: &PathBuf) {
                     if let Some(index) = num.checked_sub(1) {
                         if let Some(command) = config.commands.get(index) {
                             if let Some(cmd_sound) = &config.cmd_sound {
-                                tokio::spawn(play_sound(cmd_sound.clone()));
+                                tokio::spawn(play_sound(cmd_sound.to_path_buf()));
                             }
                             if config.window_title_support {
                                 set_window_title(&choice);
