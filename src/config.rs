@@ -51,9 +51,9 @@ pub(crate) fn get_config_file_path() -> Result<PathBuf, String> {
 
 // Loads config (multiple sections, including commands) from a file.
 pub fn load_config(path: &PathBuf) -> anyhow::Result<Config> {
-    let config_data = std::fs::read_to_string(path).context("unable to read config file")?;
-    let config: Config =
-        serde_json::from_str(&config_data).context("unable to parse config file")?;
+    let config_data = std::fs::read_to_string(path)
+        .with_context(|| format!("unable to load config file located at {}", path.display()))?;
+    let config: Config = serde_json::from_str(&config_data).context("unable to parse config")?;
     Ok(config)
 }
 
