@@ -1,6 +1,6 @@
 [package]
 name = "shell_command_menu"
-version = "0.2.5"
+version = "0.2.6"
 edition = "2024"
 
 [dependencies]
@@ -11,7 +11,7 @@ termion = "4.0.6"
 prettytable = "0.10.0"
 inquire = "0.9.4"
 textwrap = "0.16.2"
-rodio = "0.22.1"
+rodio = "0.22.2"
 tokio = { version = "1.50.0", features = ["full"] }
 anyhow = "1.0.102"
 csv = "1.4.0"

@@ -1,4 +1,4 @@
-use rodio::{Decoder, OutputStreamBuilder, Sink};
+use rodio::{Decoder, DeviceSinkBuilder, Player};
 use std::fs::File;
 use std::io::{BufReader, Write, stdin, stdout};
 use std::path::PathBuf;
@@ -41,7 +41,7 @@ pub async fn play_sound(file_path: PathBuf) {
     task::spawn_blocking(move || {
         // Spawning a blocking task
 
-        match OutputStreamBuilder::open_default_stream() {
+        match DeviceSinkBuilder::open_default_sink() {
             Ok(mut stream_handle) => {
                 // Trying to get the default audio output stream
                 stream_handle.log_on_drop(false); // Set log_on_drop to false
@@ -51,7 +51,7 @@ pub async fn play_sound(file_path: PathBuf) {
                         match Decoder::new(BufReader::new(file)) {
                             Ok(source) => {
                                 // Trying to decode the audio file
-                                let sink = Sink::connect_new(stream_handle.mixer()); // Creating a sink for the audio stream
+                                let sink = Player::connect_new(stream_handle.mixer()); // Creating a sink for the audio stream
                                 sink.append(source); // Appending the audio source to the sink
                                 sink.sleep_until_end(); // Sleeping until the audio playback ends
                             }

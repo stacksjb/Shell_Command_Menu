@@ -1,5 +1,8 @@
 # Changelog
 
+3/5/26 - v0.2.6
+Rixed remaining Rodio Issues
+
 1/27/26 - v0.2.5
 Updated to latest rodio; code cleanup; added test cases
 
