@@ -12,11 +12,11 @@ prettytable = "0.10.0"
 inquire = "0.9.4"
 textwrap = "0.16.2"
 rodio = "0.22.2"
-tokio = { version = "1.50.0", features = ["full"] }
+tokio = { version = "1.52.1", features = ["full"] }
 anyhow = "1.0.102"
 csv = "1.4.0"
 
 
 [dev-dependencies]
 serial_test = "3.4.0"
-tempfile = "3.26.0"
+tempfile = "3.27.0"
