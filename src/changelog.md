@@ -1,5 +1,8 @@
 # Changelog
 
+5/4/26 - v0.3.0
+Code update with signficant refactor based on latest review
+
 3/5/26 - v0.2.6
 Rixed remaining Rodio Issues
 

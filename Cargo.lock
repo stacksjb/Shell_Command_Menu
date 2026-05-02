@@ -1233,7 +1233,7 @@ dependencies = [
 
 [[package]]
 name = "shell_command_menu"
-version = "0.2.6"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
