@@ -2,22 +2,16 @@ use rodio::{Decoder, DeviceSinkBuilder, Player};
 use std::fs::File;
 use std::io::{BufReader, Write, stdin, stdout};
 use std::path::PathBuf;
-use std::process::Command; // Importing Command struct for executing shell commands // Importing types for audio playback
+use std::process::{Command, ExitStatus}; // Importing Command struct for executing shell commands // Importing types for audio playback
 use termion::{input::TermRead, raw::IntoRawMode}; // Importing IntoRawMode trait for entering raw mode
 use tokio::task; // Importing task module from Tokio for asynchronous task handling // Importing stdout, stdin, and Write traits for I/O operations
 
 //This file contains the utility functions used in the project to run shell commands and other misc functions.
 // Function to run a shell command
 /// Runs a shell command and prints the result, capturing stdout/stderr for cleaner output.
-pub fn run_command(command: &str) {
+pub fn run_command(command: &str) -> anyhow::Result<ExitStatus> {
     println!("Running command: {command}"); // Printing the command being executed
-    let mut child = Command::new("sh") // Starting a new shell command
-        .arg("-c") // Passing a command to the shell
-        .arg(command) // The command to execute
-        .spawn() // Starting the command asynchronously
-        .expect("❌ Failed to execute command"); // Handling any errors
-
-    let status = child.wait().expect("Command wasn't running"); // Waiting for the command to finish
+    let status = execute_command(command)?;
 
     if status.success() {
         // Checking if the command was successful
@@ -26,6 +20,14 @@ pub fn run_command(command: &str) {
         println!("\x07\x1b[31mError\x1b[0m: Command returned a non-zero exit status.");
         // Printing error message
     }
+
+    Ok(status)
+}
+
+pub fn execute_command(command: &str) -> anyhow::Result<ExitStatus> {
+    let mut child = Command::new("sh").arg("-c").arg(command).spawn()?;
+
+    Ok(child.wait()?)
 }
 
 // Function to pause execution until user input is received
@@ -90,15 +92,15 @@ mod tests {
     #[test]
     #[serial]
     fn test_run_command_success() {
-        run_command("echo 'Hello'");
-        println!();
+        let status = run_command("echo 'Hello'").expect("command should run");
+        assert!(status.success());
     }
 
     #[test]
     #[serial]
     fn test_run_command_failure() {
-        run_command("non_existent_command_hopefully");
-        println!();
+        let status = run_command("non_existent_command_hopefully").expect("shell should run");
+        assert!(!status.success());
     }
 
     #[tokio::test]

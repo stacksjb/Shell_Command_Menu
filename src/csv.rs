@@ -204,6 +204,29 @@ mod tests {
         assert_eq!(config.commands[0].display_name, "Keep");
         assert!(changed);
     }
+
+    #[test]
+    fn test_merge_imported_commands_cancel_without_prior_changes_stays_clean() {
+        let mut config = Config {
+            commands: vec![CommandOption {
+                display_name: "Keep".into(),
+                command: "echo keep".into(),
+            }],
+            ..Default::default()
+        };
+        let new = vec![CommandOption {
+            display_name: "ShouldNotAdd".into(),
+            command: "echo nope".into(),
+        }];
+        let mut changed = false;
+
+        merge_imported_commands(&mut config, new, "cancel", &mut changed);
+
+        assert_eq!(config.commands.len(), 1);
+        assert_eq!(config.commands[0].display_name, "Keep");
+        assert!(!changed);
+    }
+
     #[test]
     fn test_read_commands_from_csv_valid_csv() {
         let path = "tests/fixtures/commands.csv"; // Must be a real file with no prompts
@@ -219,5 +242,12 @@ mod tests {
         let path = "tests/fixtures/invalid.csv"; // Create this with garbage data
         let result = read_commands_from_csv(path);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_read_commands_from_empty_csv() {
+        let path = "tests/fixtures/empty.csv";
+        let commands = read_commands_from_csv(path).expect("Should parse empty CSV");
+        assert!(commands.is_empty());
     }
 }

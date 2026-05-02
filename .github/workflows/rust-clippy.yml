@@ -42,11 +42,12 @@ jobs:
         run: cargo install clippy-sarif sarif-fmt
 
       - name: Run rust-clippy
-        run:
-          cargo clippy
-          --all-features
-          --message-format=json | clippy-sarif | tee rust-clippy-results.sarif | sarif-fmt
-        continue-on-error: true
+        run: |
+          set -o pipefail
+          cargo clippy \
+            --all-targets \
+            --all-features \
+            --message-format=json | clippy-sarif | tee rust-clippy-results.sarif | sarif-fmt
 
       - name: Upload analysis results to GitHub
         uses: github/codeql-action/upload-sarif@v3

@@ -5,7 +5,7 @@ use crate::{
 use inquire::Select;
 use std::{
     io::{Write, stdout},
-    path::PathBuf,
+    path::Path,
     process::exit,
 };
 use termion::{clear, cursor, terminal_size};
@@ -29,7 +29,7 @@ pub fn prompt_or_return<T>(prompt: impl FnOnce() -> Result<T, InquireError>) -> 
 }
 
 #[tokio::main]
-pub async fn display_menu(config_path: &PathBuf) {
+pub async fn display_menu(config_path: &Path) {
     let mut selected_commands: Vec<usize> = vec![];
     let mut last_selected: Option<usize> = None;
 
@@ -97,7 +97,7 @@ pub async fn display_menu(config_path: &PathBuf) {
                             if config.window_title_support {
                                 set_window_title(&choice);
                             }
-                            run_command(&command.command);
+                            let _ = run_command(&command.command);
                             selected_commands.push(num);
                             last_selected = Some(index);
                         } else {
@@ -131,8 +131,7 @@ pub fn generate_menu(commands: &[CommandOption], selected_commands: &[usize]) ->
 }
 
 pub fn get_terminal_height() -> u16 {
-    let (_, height) = terminal_size().unwrap();
-    height
+    terminal_size().map_or(24, |(_, height)| height)
 }
 
 pub fn clear_screen() {

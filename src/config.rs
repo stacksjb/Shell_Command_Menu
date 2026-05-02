@@ -2,12 +2,11 @@ use anyhow::Context; // Importing context from the anyhow crate
 use directories::BaseDirs;
 use inquire::{Select, Text};
 use serde::{Deserialize, Serialize}; // For serializing/deserializing config
-use std::fs::File;
-use std::io::Write;
+use std::fs;
 use std::path::{Path, PathBuf};
 
 // Define the Config struct with multiple sections
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default, PartialEq, Eq)]
 #[serde(default)] // Default values for the struct
 #[serde(rename_all = "camelCase")] // Rename fields to camelCase in JSON
 pub struct Config {
@@ -18,7 +17,7 @@ pub struct Config {
 }
 
 // Define the CommandOption struct
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default, PartialEq, Eq)]
 pub struct CommandOption {
     pub display_name: String,
     pub command: String,
@@ -50,7 +49,7 @@ pub fn get_config_file_path() -> Result<PathBuf, String> {
 }
 
 // Loads config (multiple sections, including commands) from a file.
-pub fn load_config(path: &PathBuf) -> anyhow::Result<Config> {
+pub fn load_config(path: &Path) -> anyhow::Result<Config> {
     let config_data = std::fs::read_to_string(path)
         .with_context(|| format!("unable to load config file located at {}", path.display()))?;
     let config: Config = serde_json::from_str(&config_data).context("unable to parse config")?;
@@ -58,18 +57,25 @@ pub fn load_config(path: &PathBuf) -> anyhow::Result<Config> {
 }
 
 // Save the entire configuration (including commands and other sections) to a file.
-pub fn save_config(path: &Path, config: &Config) {
-    let config_data = serde_json::to_string_pretty(config).expect("❌  Failed to serialize config");
-    let mut file = File::create(path).expect("❌  Unable to create config file ");
-    // Write the serialized config data to the file
-    file.write_all(config_data.as_bytes())
-        .expect("❌  Unable to write to config file");
+pub fn save_config(path: &Path, config: &Config) -> anyhow::Result<()> {
+    let config_data = serde_json::to_string_pretty(config).context("failed to serialize config")?;
+    fs::write(path, config_data)
+        .with_context(|| format!("unable to write config file at {}", path.display()))?;
+    Ok(())
 }
 
 // Saves a default config.
 fn create_default_config(path: &Path) -> anyhow::Result<Config> {
     let default_config = Config::default();
-    save_config(path, &default_config);
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).with_context(|| {
+            format!(
+                "unable to create config directory located at {}",
+                parent.display()
+            )
+        })?;
+    }
+    save_config(path, &default_config)?;
     println!("✅  Successfully created and saved new default config.");
     Ok(default_config)
 }
@@ -115,12 +121,10 @@ pub fn edit_window_title(config: &mut Config, changes_made: &mut bool) {
         .expect("Failed to read input");
 
     if enable_title_support == "Yes" {
-        config.window_title_support = true;
         println!("✅ Window title support enabled.");
     } else {
-        config.window_title_support = false;
+        apply_window_title_settings(config, false, None, changes_made);
         println!("✅ Window title support disabled.");
-        *changes_made = true;
         return;
     }
 
@@ -136,16 +140,41 @@ pub fn edit_window_title(config: &mut Config, changes_made: &mut bool) {
         .prompt()
         .expect("Failed to read input");
 
-    if new_title.is_empty() {
-        config.window_title = None;
-        println!("✅ Window title cleared, set to default.");
+    apply_window_title_settings(config, true, Some(&new_title), changes_made);
+
+    if let Some(title) = &config.window_title {
+        println!("✅ Window title updated to: {title}");
     } else {
-        let new_title = new_title.trim();
-        config.window_title = Some(new_title.to_string());
-        println!("✅ Window title updated to: {new_title}");
+        println!("✅ Window title cleared, set to default.");
+    }
+}
+
+pub fn apply_window_title_settings(
+    config: &mut Config,
+    enable_title_support: bool,
+    new_title: Option<&str>,
+    changes_made: &mut bool,
+) {
+    let original_title_support = config.window_title_support;
+    let original_title = config.window_title.clone();
+
+    config.window_title_support = enable_title_support;
+    if enable_title_support {
+        config.window_title = new_title.and_then(|title| {
+            let title = title.trim();
+            if title.is_empty() {
+                None
+            } else {
+                Some(title.to_string())
+            }
+        });
     }
 
-    *changes_made = true;
+    if config.window_title_support != original_title_support
+        || config.window_title != original_title
+    {
+        *changes_made = true;
+    }
 }
 
 #[cfg(test)]
@@ -163,7 +192,6 @@ mod tests {
 
     #[test]
     fn test_save_and_load_config_roundtrip() {
-        use std::fs;
         use tempfile::NamedTempFile;
 
         let file = NamedTempFile::new().unwrap();
@@ -179,7 +207,7 @@ mod tests {
             window_title: Some("My CLI Menu".into()),
         };
 
-        save_config(&path, &original);
+        save_config(&path, &original).expect("Should save config");
 
         let loaded = load_config(&path).expect("Should load config");
         assert_eq!(original.commands.len(), loaded.commands.len());
@@ -187,13 +215,97 @@ mod tests {
         assert_eq!(original.window_title, loaded.window_title);
         assert_eq!(original.window_title_support, loaded.window_title_support);
 
-        fs::remove_file(path).unwrap();
+        std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn test_create_default_config_creates_parent_directory() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("nested").join("cli_menu_cmd.json");
+
+        let config = create_default_config(&path).expect("Should create default config");
+
+        assert_eq!(config, Config::default());
+        assert!(path.exists());
     }
     #[test]
     fn test_validate_json_returns_true_for_valid_config() {
         let config = Config::default();
         assert!(validate_json(&config));
     }
+
+    #[test]
+    fn test_apply_window_title_disable_without_change_stays_clean() {
+        let mut config = Config::default();
+        let mut changed = false;
+
+        apply_window_title_settings(&mut config, false, None, &mut changed);
+
+        assert!(!config.window_title_support);
+        assert!(!changed);
+    }
+
+    #[test]
+    fn test_apply_window_title_disable_existing_support_marks_changed() {
+        let mut config = Config {
+            window_title_support: true,
+            window_title: Some("CLI Menu".into()),
+            ..Default::default()
+        };
+        let mut changed = false;
+
+        apply_window_title_settings(&mut config, false, None, &mut changed);
+
+        assert!(!config.window_title_support);
+        assert_eq!(config.window_title.as_deref(), Some("CLI Menu"));
+        assert!(changed);
+    }
+
+    #[test]
+    fn test_apply_window_title_same_title_stays_clean() {
+        let mut config = Config {
+            window_title_support: true,
+            window_title: Some("CLI Menu".into()),
+            ..Default::default()
+        };
+        let mut changed = false;
+
+        apply_window_title_settings(&mut config, true, Some("CLI Menu"), &mut changed);
+
+        assert_eq!(config.window_title.as_deref(), Some("CLI Menu"));
+        assert!(!changed);
+    }
+
+    #[test]
+    fn test_apply_window_title_change_marks_changed() {
+        let mut config = Config {
+            window_title_support: true,
+            window_title: Some("CLI Menu".into()),
+            ..Default::default()
+        };
+        let mut changed = false;
+
+        apply_window_title_settings(&mut config, true, Some("New Title"), &mut changed);
+
+        assert_eq!(config.window_title.as_deref(), Some("New Title"));
+        assert!(changed);
+    }
+
+    #[test]
+    fn test_apply_window_title_empty_title_clears_title() {
+        let mut config = Config {
+            window_title_support: true,
+            window_title: Some("CLI Menu".into()),
+            ..Default::default()
+        };
+        let mut changed = false;
+
+        apply_window_title_settings(&mut config, true, Some("  "), &mut changed);
+
+        assert!(config.window_title.is_none());
+        assert!(changed);
+    }
+
     #[test]
     fn test_get_config_file_path_returns_path() {
         let path = get_config_file_path().expect("Should return a config path");

@@ -21,7 +21,7 @@ fn config_roundtrip_save_load() {
         window_title: Some("CLI Menu".into()),
     };
 
-    save_config(&path, &original);
+    save_config(&path, &original).expect("save config");
     let loaded = load_config(&path).expect("load config");
 
     assert_eq!(loaded.commands.len(), 1);
