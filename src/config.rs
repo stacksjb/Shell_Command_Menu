@@ -120,6 +120,7 @@ pub fn edit_window_title(config: &mut Config, changes_made: &mut bool) {
     } else {
         config.window_title_support = false;
         println!("✅ Window title support disabled.");
+        *changes_made = true;
         return;
     }
 

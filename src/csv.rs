@@ -114,9 +114,7 @@ fn merge_imported_commands(
             config.commands = new_commands;
             *changes_made = true;
         }
-        _ => {
-            *changes_made = false;
-        }
+        _ => {}
     }
 }
 
@@ -198,13 +196,13 @@ mod tests {
             display_name: "ShouldNotAdd".into(),
             command: "echo nope".into(),
         }];
-        let mut changed = false;
+        let mut changed = true;
 
         merge_imported_commands(&mut config, new, "cancel", &mut changed);
 
         assert_eq!(config.commands.len(), 1);
         assert_eq!(config.commands[0].display_name, "Keep");
-        assert!(!changed);
+        assert!(changed);
     }
     #[test]
     fn test_read_commands_from_csv_valid_csv() {
