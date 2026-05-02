@@ -12,14 +12,17 @@ permissions:
 jobs:
   coverage:
     runs-on: ubuntu-latest
+    env:
+      PKG_CONFIG_PATH: /usr/lib/x86_64-linux-gnu/pkgconfig
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install ALSA development files
-        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
-      - name: Install pkg-config
-        run: sudo apt-get install -y pkg-config
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libasound2-dev
+          pkg-config --libs --cflags alsa
 
       - name: Build and test
         run: cargo test --workspace --all-targets
