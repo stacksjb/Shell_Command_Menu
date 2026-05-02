@@ -229,8 +229,8 @@ mod tests {
 
     #[test]
     fn test_read_commands_from_csv_valid_csv() {
-        let path = "tests/fixtures/commands.csv"; // Must be a real file with no prompts
-        let commands = read_commands_from_csv(path).expect("Should parse CSV");
+        let commands =
+            read_commands_from_csv("tests/fixtures/commands.csv").expect("Should parse CSV");
 
         assert_eq!(commands.len(), 2);
         assert_eq!(commands[0].display_name, "List Files");
@@ -239,15 +239,14 @@ mod tests {
 
     #[test]
     fn test_read_commands_from_invalid_csv() {
-        let path = "tests/fixtures/invalid.csv"; // Create this with garbage data
-        let result = read_commands_from_csv(path);
+        let result = read_commands_from_csv("tests/fixtures/invalid.csv");
         assert!(result.is_err());
     }
 
     #[test]
     fn test_read_commands_from_empty_csv() {
-        let path = "tests/fixtures/empty.csv";
-        let commands = read_commands_from_csv(path).expect("Should parse empty CSV");
+        let commands =
+            read_commands_from_csv("tests/fixtures/empty.csv").expect("Should parse empty CSV");
         assert!(commands.is_empty());
     }
 }

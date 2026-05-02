@@ -34,6 +34,8 @@ Temporary Items
 # End of https://www.toptal.com/developers/gitignore/api/rust,macos
 *.json
 *.csv
+!test_commands.csv
+!tests/fixtures/*.csv
 *.bundle
 assets/zoom_iterm.scpt
 assets/zoom_iterm.scpt
