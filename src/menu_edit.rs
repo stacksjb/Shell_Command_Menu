@@ -36,9 +36,8 @@ pub fn edit_menu(config_path: &Path) {
 
         let menu_prompt =
             prompt_or_return(|| Select::new("Select an option: ", menu_options).prompt());
-        let choice = match menu_prompt {
-            Some(choice) => choice,
-            None => continue,
+        let Some(choice) = menu_prompt else {
+            continue;
         };
 
         match choice {
@@ -93,22 +92,20 @@ pub fn edit_menu(config_path: &Path) {
 }
 
 pub fn add_command(config: &mut Config, changes_made: &mut bool) {
-    let display_name = match prompt_or_return(|| {
+    let Some(display_name) = prompt_or_return(|| {
         inquire::Text::new("Enter the display name for the command:")
             .with_help_message("This name will be displayed in the menu")
             .prompt()
-    }) {
-        Some(value) => value,
-        None => return,
+    }) else {
+        return;
     };
 
-    let command = match prompt_or_return(|| {
+    let Some(command) = prompt_or_return(|| {
         inquire::Text::new("Enter the command to execute:")
             .with_help_message("This command will be executed in the shell")
             .prompt()
-    }) {
-        Some(value) => value,
-        None => return,
+    }) else {
+        return;
     };
 
     add_command_to_config(config, display_name, command, changes_made);
@@ -127,37 +124,36 @@ pub fn edit_command(config: &mut Config, changes_made: &mut bool) {
         .map(|(i, cmd)| format!("{}. {}", i + 1, cmd.display_name))
         .collect();
 
-    let command_index =
-        match prompt_or_return(|| Select::new("Select a command to edit:", command_names).prompt())
-        {
-            Some(value) => value,
-            None => return,
-        };
+    let Some(command_index) =
+        prompt_or_return(|| Select::new("Select a command to edit:", command_names).prompt())
+    else {
+        return;
+    };
+    let Some(command_number) = selected_command_index(&command_index) else {
+        println!("❌  Invalid choice, please try again.");
+        return;
+    };
+    let Some(existing_command) = config.commands.get(command_number) else {
+        println!("❌  Invalid choice, please try again.");
+        return;
+    };
+    let current_display_name = existing_command.display_name.clone();
+    let current_command = existing_command.command.clone();
 
-    let command_number = command_index
-        .split('.')
-        .next()
-        .unwrap()
-        .parse::<usize>()
-        .unwrap()
-        - 1;
-
-    let display_name = match prompt_or_return(|| {
+    let Some(display_name) = prompt_or_return(|| {
         inquire::Text::new("Enter the new display name for the command:")
-            .with_initial_value(&config.commands[command_number].display_name)
+            .with_initial_value(&current_display_name)
             .prompt()
-    }) {
-        Some(value) => value,
-        None => return,
+    }) else {
+        return;
     };
 
-    let command = match prompt_or_return(|| {
+    let Some(command) = prompt_or_return(|| {
         inquire::Text::new("Enter the new command to execute:")
-            .with_initial_value(&config.commands[command_number].command)
+            .with_initial_value(&current_command)
             .prompt()
-    }) {
-        Some(value) => value,
-        None => return,
+    }) else {
+        return;
     };
 
     let _ = edit_command_at(config, command_number, display_name, command, changes_made);
@@ -176,20 +172,16 @@ pub fn reorder_command(config: &mut Config, changes_made: &mut bool) {
         .map(|(i, cmd)| format!("{}. {}", i + 1, cmd.display_name))
         .collect();
 
-    let command_index = match prompt_or_return(|| {
-        Select::new("Select a command to reorder:", command_names).prompt()
-    }) {
-        Some(value) => value,
-        None => return,
+    let Some(command_index) =
+        prompt_or_return(|| Select::new("Select a command to reorder:", command_names).prompt())
+    else {
+        return;
     };
 
-    let command_number = command_index
-        .split('.')
-        .next()
-        .unwrap()
-        .parse::<usize>()
-        .unwrap()
-        - 1;
+    let Some(command_number) = selected_command_index(&command_index) else {
+        println!("❌  Invalid choice, please try again.");
+        return;
+    };
 
     let new_position: usize = match prompt_or_return(|| {
         inquire::Text::new("Enter the new position for this command:")
@@ -223,20 +215,16 @@ pub fn delete_command(config: &mut Config, changes_made: &mut bool) {
         .map(|(i, cmd)| format!("{}. {}", i + 1, cmd.display_name))
         .collect();
 
-    let command_index = match prompt_or_return(|| {
-        Select::new("Select a command to delete:", command_names).prompt()
-    }) {
-        Some(value) => value,
-        None => return,
+    let Some(command_index) =
+        prompt_or_return(|| Select::new("Select a command to delete:", command_names).prompt())
+    else {
+        return;
     };
 
-    let command_number = command_index
-        .split('.')
-        .next()
-        .unwrap()
-        .parse::<usize>()
-        .unwrap()
-        - 1;
+    let Some(command_number) = selected_command_index(&command_index) else {
+        println!("❌  Invalid choice, please try again.");
+        return;
+    };
 
     if let Some(deleted) = delete_command_at(config, command_number, changes_made) {
         println!(
@@ -244,6 +232,16 @@ pub fn delete_command(config: &mut Config, changes_made: &mut bool) {
             deleted.display_name
         );
     }
+}
+
+fn selected_command_index(selection: &str) -> Option<usize> {
+    selection
+        .split('.')
+        .next()?
+        .trim()
+        .parse::<usize>()
+        .ok()?
+        .checked_sub(1)
 }
 
 pub fn clear_all_commands(config: &mut Config, changes_made: &mut bool) {

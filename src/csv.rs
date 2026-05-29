@@ -6,7 +6,11 @@ use crate::{
 use inquire::Select; // Importing Select prompt from inquire crate
 use std::{env, fs, path::Path}; // Importing necessary modules from standard library // Importing functions and structs from other modules
 
-// Function to import commands from CSV
+/// Prompts for a CSV file and imports commands into the current config.
+///
+/// # Panics
+///
+/// Panics if an interactive menu prompt cannot be displayed.
 pub fn import_commands(config: &mut Config, changes_made: &mut bool) {
     let dir = env::current_dir().unwrap_or_else(|_| ".".into());
     let files = match list_csv_files(&dir) {
@@ -66,7 +70,12 @@ pub fn import_commands(config: &mut Config, changes_made: &mut bool) {
     }
 }
 
-// Function to read commands from a CSV file
+/// Reads command entries from a CSV file.
+///
+/// # Errors
+///
+/// Returns an error when the CSV file cannot be opened or a record cannot be
+/// deserialized as a [`CommandOption`].
 pub fn read_commands_from_csv<P: AsRef<Path>>(path: P) -> anyhow::Result<Vec<CommandOption>> {
     let mut reader = csv::Reader::from_path(path)?;
     let mut commands = Vec::new();
@@ -91,7 +100,10 @@ fn list_csv_files(dir_path: &Path) -> anyhow::Result<Vec<String>> {
         let Ok(name) = entry.file_name().into_string() else {
             continue; // Skipping invalid file names
         };
-        if name.ends_with(".csv") {
+        if Path::new(&name)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("csv"))
+        {
             files.push(name); // Adding CSV file names to the vector
         }
     }
