@@ -7,8 +7,12 @@ use termion::{input::TermRead, raw::IntoRawMode}; // Importing IntoRawMode trait
 use tokio::task; // Importing task module from Tokio for asynchronous task handling // Importing stdout, stdin, and Write traits for I/O operations
 
 //This file contains the utility functions used in the project to run shell commands and other misc functions.
-// Function to run a shell command
 /// Runs a shell command and prints the result, capturing stdout/stderr for cleaner output.
+///
+/// # Errors
+///
+/// Returns an error when the shell cannot be spawned or the command status
+/// cannot be collected.
 pub fn run_command(command: &str) -> anyhow::Result<ExitStatus> {
     println!("Running command: {command}"); // Printing the command being executed
     let status = execute_command(command)?;
@@ -24,6 +28,12 @@ pub fn run_command(command: &str) -> anyhow::Result<ExitStatus> {
     Ok(status)
 }
 
+/// Executes a shell command and returns its exit status.
+///
+/// # Errors
+///
+/// Returns an error when the shell cannot be spawned or the command status
+/// cannot be collected.
 pub fn execute_command(command: &str) -> anyhow::Result<ExitStatus> {
     let mut child = Command::new("sh").arg("-c").arg(command).spawn()?;
 
@@ -32,15 +42,19 @@ pub fn execute_command(command: &str) -> anyhow::Result<ExitStatus> {
 
 // Function to pause execution until user input is received
 pub fn pause() {
-    let mut stdout = stdout().into_raw_mode().unwrap(); // Entering raw mode for stdout
-    stdout.flush().unwrap(); // Flushing stdout
+    let Ok(mut stdout) = stdout().into_raw_mode() else {
+        eprintln!("❌  Failed to enter raw terminal mode.");
+        return;
+    };
+    if let Err(e) = stdout.flush() {
+        eprintln!("❌  Failed to flush terminal output: {e}");
+    }
     stdin().events().next(); // Waiting for user input
 }
 
 // Function to play a sound asynchronously from filepath
 pub async fn play_sound(file_path: PathBuf) {
-    let file_path = file_path.clone(); // Cloning the PathBuf to be owned by the closure
-    task::spawn_blocking(move || {
+    if let Err(e) = task::spawn_blocking(move || {
         // Spawning a blocking task
 
         match DeviceSinkBuilder::open_default_sink() {
@@ -58,13 +72,13 @@ pub async fn play_sound(file_path: PathBuf) {
                                 sink.sleep_until_end(); // Sleeping until the audio playback ends
                             }
                             _ => {
-                                println!("❌ Failed to decode audio file: {file_path:?}");
+                                println!("❌ Failed to decode audio file: {}", file_path.display());
                                 // Printing error message if decoding fails
                             }
                         }
                     }
                     _ => {
-                        println!("❌ Failed to open audio file: {file_path:?}");
+                        println!("❌ Failed to open audio file: {}", file_path.display());
                         // Printing error message if file opening fails
                     }
                 }
@@ -75,10 +89,13 @@ pub async fn play_sound(file_path: PathBuf) {
         }
     })
     .await
-    .unwrap(); // Waiting for the task to finish and handling any errors
+    {
+        eprintln!("❌ Audio playback task failed: {e}");
+    }
 }
 
 // Function to return the current version
+#[must_use]
 pub fn get_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }

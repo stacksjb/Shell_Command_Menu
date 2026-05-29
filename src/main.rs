@@ -37,7 +37,7 @@ fn main() {
             path // Return the path
         }
         Err(e) => {
-            let _ = &eprintln!("{e}"); // Print the error message
+            eprintln!("{e}"); // Print the error message
             std::process::exit(1); // Exit if unable to get the config path
         }
     };

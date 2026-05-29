@@ -23,7 +23,12 @@ pub struct CommandOption {
     pub command: String,
 }
 
-// Function to get the path of the config file; else create it
+/// Returns the config file path, creating a default config when missing.
+///
+/// # Errors
+///
+/// Returns an error when the user config directory cannot be resolved, an
+/// existing config cannot be loaded, or a default config cannot be created.
 pub fn get_config_file_path() -> Result<PathBuf, String> {
     let base_dirs = BaseDirs::new().ok_or("Could not get base directories")?;
 
@@ -37,10 +42,16 @@ pub fn get_config_file_path() -> Result<PathBuf, String> {
 
         // Validate the JSON structure
         if validate_json(&config) {
-            println!("✅  Config file loaded successfully from path: {config_file:?}");
+            println!(
+                "✅  Config file loaded successfully from path: {}",
+                config_file.display()
+            );
         }
     } else {
-        println!("⚠️  Config file not found. Creating new default config at: {config_file:?}");
+        println!(
+            "⚠️  Config file not found. Creating new default config at: {}",
+            config_file.display()
+        );
         create_default_config(&config_file)
             .map_err(|e| format!("Failed to create default config file: {e}"))?;
     }
@@ -48,7 +59,12 @@ pub fn get_config_file_path() -> Result<PathBuf, String> {
     Ok(config_file)
 }
 
-// Loads config (multiple sections, including commands) from a file.
+/// Loads config sections, including commands, from a file.
+///
+/// # Errors
+///
+/// Returns an error when the file cannot be read or the JSON cannot be parsed
+/// as a [`Config`].
 pub fn load_config(path: &Path) -> anyhow::Result<Config> {
     let config_data = std::fs::read_to_string(path)
         .with_context(|| format!("unable to load config file located at {}", path.display()))?;
@@ -56,7 +72,11 @@ pub fn load_config(path: &Path) -> anyhow::Result<Config> {
     Ok(config)
 }
 
-// Save the entire configuration (including commands and other sections) to a file.
+/// Saves the entire configuration, including commands and other sections.
+///
+/// # Errors
+///
+/// Returns an error when the config cannot be serialized or written to disk.
 pub fn save_config(path: &Path, config: &Config) -> anyhow::Result<()> {
     let config_data = serde_json::to_string_pretty(config).context("failed to serialize config")?;
     fs::write(path, config_data)
@@ -81,11 +101,16 @@ fn create_default_config(path: &Path) -> anyhow::Result<Config> {
 }
 
 // Function to validate JSON config file
+#[must_use]
 pub fn validate_json(config: &Config) -> bool {
     serde_json::to_string(config).is_ok()
 }
 
-// Function to edit the cmd_sound path
+/// Prompts the user to edit the `cmd_sound` path.
+///
+/// # Panics
+///
+/// Panics if the interactive prompt cannot read input.
 pub fn edit_cmd_sound(config: &mut Config, changes_made: &mut bool) {
     let current_sound = config
         .cmd_sound
@@ -114,7 +139,11 @@ pub fn edit_cmd_sound(config: &mut Config, changes_made: &mut bool) {
     *changes_made = true; // Mark changes as made
 }
 
-// Function to edit the window title
+/// Prompts the user to edit the window title settings.
+///
+/// # Panics
+///
+/// Panics if an interactive prompt cannot read input.
 pub fn edit_window_title(config: &mut Config, changes_made: &mut bool) {
     let enable_title_support = Select::new("Enable window title support?", vec!["Yes", "No"])
         .prompt()
@@ -131,7 +160,7 @@ pub fn edit_window_title(config: &mut Config, changes_made: &mut bool) {
     let current_title = config
         .window_title
         .as_ref()
-        .map_or(String::new(), |title| title.clone());
+        .map_or_else(String::new, std::clone::Clone::clone);
 
     println!("Current window title: {current_title}");
 
