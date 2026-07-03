@@ -1,10 +1,14 @@
 use shell_command_menu::{config, menu_main, utils};
+use std::path::PathBuf;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     // Print the version
     let version = utils::get_version();
     let mut args = std::env::args().skip(1);
-    if let Some(arg) = args.next() {
+    let mut config_override: Option<PathBuf> = None;
+
+    while let Some(arg) = args.next() {
         match arg.as_str() {
             "--version" | "-V" => {
                 println!("{version}");
@@ -23,6 +27,13 @@ fn main() {
                     }
                 }
             }
+            "--config" | "-c" => {
+                let Some(path) = args.next() else {
+                    eprintln!("Missing path for {arg}");
+                    std::process::exit(2);
+                };
+                config_override = Some(PathBuf::from(path));
+            }
             _ => {
                 eprintln!("Unknown argument: {arg}");
                 std::process::exit(2);
@@ -32,7 +43,11 @@ fn main() {
 
     println!("Welcome to CLI_Menu v{version}!");
     // Execute the config::get_config_file_path function to get the config file path and load it; else create it
-    let config_path = match config::get_config_file_path() {
+    let config_path_result = match config_override {
+        Some(path) => config::ensure_config_file_path(path),
+        None => config::get_config_file_path(),
+    };
+    let config_path = match config_path_result {
         Ok(path) => {
             path // Return the path
         }
@@ -42,5 +57,5 @@ fn main() {
         }
     };
     //Execute the display_menu function from the menu module with the config file from previous function
-    menu_main::display_menu(&config_path);
+    menu_main::display_menu(&config_path).await;
 }

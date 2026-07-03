@@ -3,14 +3,28 @@ use crate::{
     menu_edit::print_commands,
     utils::pause,
 };
-use inquire::Select; // Importing Select prompt from inquire crate
+use inquire::{Select, Text}; // Importing prompts from inquire crate
 use std::{env, fs, path::Path}; // Importing necessary modules from standard library // Importing functions and structs from other modules
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ImportStrategy {
+    Append,
+    Overwrite,
+    Cancel,
+}
+
+impl ImportStrategy {
+    fn from_label(label: &str) -> Self {
+        match label {
+            "a. APPEND to current commands" => Self::Append,
+            "o. OVERWRITE current commands" => Self::Overwrite,
+            _ => Self::Cancel,
+        }
+    }
+}
 
 /// Prompts for a CSV file and imports commands into the current config.
 ///
-/// # Panics
-///
-/// Panics if an interactive menu prompt cannot be displayed.
 pub fn import_commands(config: &mut Config, changes_made: &mut bool) {
     let dir = env::current_dir().unwrap_or_else(|_| ".".into());
     let files = match list_csv_files(&dir) {
@@ -26,9 +40,13 @@ pub fn import_commands(config: &mut Config, changes_made: &mut bool) {
         return;
     }
 
-    let path = Select::new("Select a file to import: ", files)
-        .prompt()
-        .expect("Failed to display menu");
+    let path = match Select::new("Select a file to import: ", files).prompt() {
+        Ok(path) => path,
+        Err(e) => {
+            println!("⚠️ Import canceled: {e}");
+            return;
+        }
+    };
 
     let commands = match read_commands_from_csv(&path) {
         Ok(commands) => commands,
@@ -48,25 +66,51 @@ pub fn import_commands(config: &mut Config, changes_made: &mut bool) {
         "c. CANCEL import",
     ];
 
-    let menu_prompt = Select::new("Select an option: ", menu_options)
-        .prompt()
-        .expect("❌ Failed to display menu");
-
-    let strategy = match menu_prompt {
-        "a. APPEND to current commands" => "append",
-        "o. OVERWRITE current commands" => "overwrite",
-        _ => "cancel",
+    let menu_prompt = match Select::new("Select an option: ", menu_options).prompt() {
+        Ok(choice) => choice,
+        Err(e) => {
+            println!("⚠️ Import canceled: {e}");
+            return;
+        }
     };
+    let strategy = ImportStrategy::from_label(menu_prompt);
 
     merge_imported_commands(config, commands, strategy, changes_made);
 
     match strategy {
-        "append" => println!("{num_commands} commands appended."),
-        "overwrite" => println!("Replaced config with {num_commands} commands from {path}"),
-        _ => {
+        ImportStrategy::Append => println!("{num_commands} commands appended."),
+        ImportStrategy::Overwrite => {
+            println!("Replaced config with {num_commands} commands from {path}");
+        }
+        ImportStrategy::Cancel => {
             println!("❌  Canceled import");
             pause();
         }
+    }
+}
+
+/// Prompts for a CSV destination and exports the current commands.
+pub fn export_commands(config: &Config) {
+    let path = match Text::new("Enter the CSV file path to export to:")
+        .with_initial_value("commands.csv")
+        .prompt()
+    {
+        Ok(path) => path,
+        Err(e) => {
+            println!("⚠️ Export canceled: {e}");
+            return;
+        }
+    };
+
+    let path = path.trim();
+    if path.is_empty() {
+        println!("⚠️ Export canceled: no path provided.");
+        return;
+    }
+
+    match write_commands_to_csv(path, &config.commands) {
+        Ok(()) => println!("✅ Exported {} commands to {path}.", config.commands.len()),
+        Err(e) => println!("❌ Could not export commands: {e}"),
     }
 }
 
@@ -88,6 +132,26 @@ pub fn read_commands_from_csv<P: AsRef<Path>>(path: P) -> anyhow::Result<Vec<Com
     Ok(commands)
 }
 
+/// Writes command entries to a CSV file.
+///
+/// # Errors
+///
+/// Returns an error when the CSV file cannot be created, written, or flushed.
+pub fn write_commands_to_csv<P: AsRef<Path>>(
+    path: P,
+    commands: &[CommandOption],
+) -> anyhow::Result<()> {
+    let mut writer = csv::WriterBuilder::new()
+        .has_headers(false)
+        .from_path(path)?;
+    writer.write_record(["display_name", "command"])?;
+    for command in commands {
+        writer.serialize(command)?;
+    }
+    writer.flush()?;
+    Ok(())
+}
+
 // Function to list CSV files in a directory
 fn list_csv_files(dir_path: &Path) -> anyhow::Result<Vec<String>> {
     let dir_reader = fs::read_dir(dir_path)?; // Creating directory reader
@@ -107,6 +171,7 @@ fn list_csv_files(dir_path: &Path) -> anyhow::Result<Vec<String>> {
             files.push(name); // Adding CSV file names to the vector
         }
     }
+    files.sort();
     Ok(files)
 }
 
@@ -114,19 +179,19 @@ fn list_csv_files(dir_path: &Path) -> anyhow::Result<Vec<String>> {
 fn merge_imported_commands(
     config: &mut Config,
     mut new_commands: Vec<CommandOption>,
-    strategy: &str,
+    strategy: ImportStrategy,
     changes_made: &mut bool,
 ) {
     match strategy {
-        "append" => {
+        ImportStrategy::Append => {
             config.commands.append(&mut new_commands);
             *changes_made = true;
         }
-        "overwrite" => {
+        ImportStrategy::Overwrite => {
             config.commands = new_commands;
             *changes_made = true;
         }
-        _ => {}
+        ImportStrategy::Cancel => {}
     }
 }
 
@@ -166,7 +231,7 @@ mod tests {
         }];
         let mut changed = false;
 
-        merge_imported_commands(&mut config, new, "append", &mut changed);
+        merge_imported_commands(&mut config, new, ImportStrategy::Append, &mut changed);
 
         assert_eq!(config.commands.len(), 2);
         assert_eq!(config.commands[1].display_name, "New");
@@ -188,7 +253,7 @@ mod tests {
         }];
         let mut changed = false;
 
-        merge_imported_commands(&mut config, new, "overwrite", &mut changed);
+        merge_imported_commands(&mut config, new, ImportStrategy::Overwrite, &mut changed);
 
         assert_eq!(config.commands.len(), 1);
         assert_eq!(config.commands[0].display_name, "Overwrite");
@@ -210,7 +275,7 @@ mod tests {
         }];
         let mut changed = true;
 
-        merge_imported_commands(&mut config, new, "cancel", &mut changed);
+        merge_imported_commands(&mut config, new, ImportStrategy::Cancel, &mut changed);
 
         assert_eq!(config.commands.len(), 1);
         assert_eq!(config.commands[0].display_name, "Keep");
@@ -232,7 +297,7 @@ mod tests {
         }];
         let mut changed = false;
 
-        merge_imported_commands(&mut config, new, "cancel", &mut changed);
+        merge_imported_commands(&mut config, new, ImportStrategy::Cancel, &mut changed);
 
         assert_eq!(config.commands.len(), 1);
         assert_eq!(config.commands[0].display_name, "Keep");
@@ -260,5 +325,19 @@ mod tests {
         let commands =
             read_commands_from_csv("tests/fixtures/empty.csv").expect("Should parse empty CSV");
         assert!(commands.is_empty());
+    }
+
+    #[test]
+    fn test_write_commands_to_csv_roundtrip() {
+        let file = tempfile::NamedTempFile::new().expect("temp file");
+        let commands = vec![CommandOption {
+            display_name: "List Files".into(),
+            command: "ls -la".into(),
+        }];
+
+        write_commands_to_csv(file.path(), &commands).expect("Should write CSV");
+        let loaded = read_commands_from_csv(file.path()).expect("Should parse written CSV");
+
+        assert_eq!(loaded, commands);
     }
 }

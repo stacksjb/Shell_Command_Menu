@@ -1,7 +1,7 @@
 use crate::config::{
-    CommandOption, Config, edit_cmd_sound, edit_window_title, save_config, validate_json,
+    CommandOption, Config, edit_cmd_sound, edit_window_title, save_config, validate_config,
 };
-use crate::csv::import_commands;
+use crate::csv::{export_commands, import_commands};
 use crate::menu_main::prompt_or_return;
 use crate::utils::pause;
 use inquire::Select;
@@ -9,6 +9,80 @@ use prettytable::{Cell, Row, Table, row};
 use std::path::Path;
 use std::process;
 use textwrap::fill;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum EditMenuChoice {
+    Add,
+    Edit,
+    Reorder,
+    Delete,
+    Reset,
+    Import,
+    Export,
+    Sound,
+    WindowTitle,
+    Quit,
+}
+
+impl EditMenuChoice {
+    const ADD: &'static str = "a. ADD a new command";
+    const EDIT: &'static str = "e. EDIT a command";
+    const REORDER: &'static str = "o. REORDER a command";
+    const DELETE: &'static str = "d. DELETE a command";
+    const RESET: &'static str = "r. RESET (clear all commands)";
+    const IMPORT: &'static str = "i. IMPORT from .csv";
+    const EXPORT: &'static str = "x. EXPORT to .csv";
+    const SOUND: &'static str = "s. SET sound file path";
+    const WINDOW_TITLE: &'static str = "t. SET Window Title settings";
+    const QUIT: &'static str = "q. Return to Main Menu (prompt to save changes)";
+
+    fn labels() -> Vec<&'static str> {
+        vec![
+            Self::ADD,
+            Self::EDIT,
+            Self::REORDER,
+            Self::DELETE,
+            Self::RESET,
+            Self::IMPORT,
+            Self::EXPORT,
+            Self::SOUND,
+            Self::WINDOW_TITLE,
+            Self::QUIT,
+        ]
+    }
+
+    fn from_label(label: &str) -> Option<Self> {
+        match label {
+            Self::ADD => Some(Self::Add),
+            Self::EDIT => Some(Self::Edit),
+            Self::REORDER => Some(Self::Reorder),
+            Self::DELETE => Some(Self::Delete),
+            Self::RESET => Some(Self::Reset),
+            Self::IMPORT => Some(Self::Import),
+            Self::EXPORT => Some(Self::Export),
+            Self::SOUND => Some(Self::Sound),
+            Self::WINDOW_TITLE => Some(Self::WindowTitle),
+            Self::QUIT => Some(Self::Quit),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SaveChoice {
+    Yes,
+    No,
+}
+
+impl SaveChoice {
+    fn from_label(label: &str) -> Option<Self> {
+        match label {
+            "Yes" => Some(Self::Yes),
+            "No" => Some(Self::No),
+            _ => None,
+        }
+    }
+}
 
 pub fn edit_menu(config_path: &Path) {
     let mut config = crate::config::load_config(config_path).unwrap_or_else(|e| {
@@ -22,59 +96,49 @@ pub fn edit_menu(config_path: &Path) {
         println!("\n🛠️ Welcome to the Edit Menu 🛠️");
         print_commands(&config.commands);
 
-        let menu_options = vec![
-            "a. ADD a new command",
-            "e. EDIT a command",
-            "o. REORDER a command",
-            "d. DELETE a command",
-            "r. RESET (clear all commands)",
-            "i. IMPORT from .csv",
-            "s. SET sound file path",
-            "t. SET Window Title settings",
-            "q. Return to Main Menu (prompt to save changes)",
-        ];
-
-        let menu_prompt =
-            prompt_or_return(|| Select::new("Select an option: ", menu_options).prompt());
+        let menu_prompt = prompt_or_return(|| {
+            Select::new("Select an option: ", EditMenuChoice::labels()).prompt()
+        });
         let Some(choice) = menu_prompt else {
             continue;
         };
 
+        let Some(choice) = EditMenuChoice::from_label(choice) else {
+            println!("❌  Invalid choice, please try again.");
+            continue;
+        };
+
         match choice {
-            "a. ADD a new command" => add_command(&mut config, &mut changes_made),
-            "e. EDIT a command" => edit_command(&mut config, &mut changes_made),
-            "o. REORDER a command" => reorder_command(&mut config, &mut changes_made),
-            "d. DELETE a command" => delete_command(&mut config, &mut changes_made),
-            "r. RESET (clear all commands)" => clear_all_commands(&mut config, &mut changes_made),
-            "s. SET sound file path" => edit_cmd_sound(&mut config, &mut changes_made),
-            "t. SET Window Title settings" => edit_window_title(&mut config, &mut changes_made),
-            "i. IMPORT from .csv" => {
+            EditMenuChoice::Add => add_command(&mut config, &mut changes_made),
+            EditMenuChoice::Edit => edit_command(&mut config, &mut changes_made),
+            EditMenuChoice::Reorder => reorder_command(&mut config, &mut changes_made),
+            EditMenuChoice::Delete => delete_command(&mut config, &mut changes_made),
+            EditMenuChoice::Reset => clear_all_commands(&mut config, &mut changes_made),
+            EditMenuChoice::Sound => edit_cmd_sound(&mut config, &mut changes_made),
+            EditMenuChoice::WindowTitle => edit_window_title(&mut config, &mut changes_made),
+            EditMenuChoice::Import => {
                 import_commands(&mut config, &mut changes_made);
                 print!("Press any key to return to Edit Command Menu...");
                 pause();
             }
-            "q. Return to Main Menu (prompt to save changes)" => {
+            EditMenuChoice::Export => {
+                export_commands(&config);
+                print!("Press any key to return to Edit Command Menu...");
+                pause();
+            }
+            EditMenuChoice::Quit => {
                 if changes_made {
                     let save_prompt = prompt_or_return(|| {
                         Select::new("Save changes?", vec!["Yes", "No"]).prompt()
                     });
-                    match save_prompt {
-                        Some("Yes") => {
-                            if validate_json(&config) {
-                                match save_config(config_path, &config) {
-                                    Ok(()) => {
-                                        println!(
-                                            "✅  Changes Saved. Press any key to return to Main Menu..."
-                                        );
-                                        pause();
-                                    }
-                                    Err(e) => println!("❌  Error saving config: {e}"),
-                                }
-                            } else {
-                                println!("❌  Error: Invalid JSON format. Changes not saved.");
+                    let save_choice = save_prompt.and_then(SaveChoice::from_label);
+                    match save_choice {
+                        Some(SaveChoice::Yes) => {
+                            if !save_current_config(config_path, &config) {
+                                continue;
                             }
                         }
-                        Some("No") => {
+                        Some(SaveChoice::No) => {
                             discard_edit_session(&mut config, &original_config, &mut changes_made);
                             println!(
                                 "❌  Changes not saved. Press any key to return to Main Menu..."
@@ -86,7 +150,31 @@ pub fn edit_menu(config_path: &Path) {
                 }
                 break;
             }
-            _ => println!("❌  Invalid choice, please try again."),
+        }
+    }
+}
+
+fn save_current_config(config_path: &Path, config: &Config) -> bool {
+    match validate_config(config) {
+        Ok(()) => match save_config(config_path, config) {
+            Ok(()) => {
+                println!("✅  Changes Saved. Press any key to return to Main Menu...");
+                pause();
+                true
+            }
+            Err(e) => {
+                println!("❌  Error saving config: {e}");
+                false
+            }
+        },
+        Err(errors) => {
+            println!("❌  Config validation failed. Changes not saved:");
+            for error in errors {
+                println!("  - {error}");
+            }
+            print!("Press any key to return to Edit Command Menu...");
+            pause();
+            false
         }
     }
 }

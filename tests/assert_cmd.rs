@@ -13,3 +13,13 @@ fn run_once_executes_command_and_reports_success() {
     assert!(stdout.contains("assert_cmd_ok"));
     assert!(stdout.contains("Command executed successfully."));
 }
+
+#[test]
+fn config_requires_path_argument() {
+    Command::cargo_bin("shell_command_menu")
+        .expect("binary should build")
+        .arg("--config")
+        .assert()
+        .code(2)
+        .stderr("Missing path for --config\n");
+}

@@ -6,6 +6,15 @@ This is a simple app I wrote to help learn Rust and also to give me a framework 
 
 Commands are stored in a cli_menu_cmd.json JSON file located at your OS-Appropriate data folder using rust [Directories](<https://docs.rs/directories/latest/directories/struct.BaseDirs.html>) config_dir.
 
+## Current Features
+
+- Run stored shell commands from an interactive terminal menu.
+- Add, edit, reorder, delete, reset, import, and export commands from the edit menu.
+- Import and export command lists as CSV files with `display_name,command` headers.
+- Configure an optional command sound and terminal window title.
+- Run a single command directly with `--run-once`.
+- Use an alternate config file with `--config /path/to/cli_menu_cmd.json`.
+
 *Most of the initial credit goes to ChatGPT which wrote most of the code. Thanks to @Scott Pack for his talk at [BSides 2023](<https://www.youtube.com/watch?v=b_pkz4kDfq0>) which helped set the stage
 
 Sound Effects credit Pixabay [whoosh](<https://pixabay.com/sound-effects/whoosh-6316/>) [message](<https://pixabay.com/sound-effects/message-incoming-132126/>)
