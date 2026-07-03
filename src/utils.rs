@@ -7,6 +7,23 @@ use termion::{input::TermRead, raw::IntoRawMode}; // Importing IntoRawMode trait
 use tokio::task; // Importing task module from Tokio for asynchronous task handling // Importing stdout, stdin, and Write traits for I/O operations
 
 //This file contains the utility functions used in the project to run shell commands and other misc functions.
+pub trait CommandExecutor {
+    /// Executes a shell command and returns its exit status.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the command cannot be spawned or waited on.
+    fn execute(&mut self, command: &str) -> anyhow::Result<ExitStatus>;
+}
+
+pub struct ShellCommandExecutor;
+
+impl CommandExecutor for ShellCommandExecutor {
+    fn execute(&mut self, command: &str) -> anyhow::Result<ExitStatus> {
+        execute_command(command)
+    }
+}
+
 /// Runs a shell command and prints the result, capturing stdout/stderr for cleaner output.
 ///
 /// # Errors
@@ -14,8 +31,21 @@ use tokio::task; // Importing task module from Tokio for asynchronous task handl
 /// Returns an error when the shell cannot be spawned or the command status
 /// cannot be collected.
 pub fn run_command(command: &str) -> anyhow::Result<ExitStatus> {
+    let mut executor = ShellCommandExecutor;
+    run_command_with(command, &mut executor)
+}
+
+/// Runs a shell command through the supplied executor.
+///
+/// # Errors
+///
+/// Returns an error when the executor cannot run the command.
+pub fn run_command_with(
+    command: &str,
+    executor: &mut impl CommandExecutor,
+) -> anyhow::Result<ExitStatus> {
     println!("Running command: {command}"); // Printing the command being executed
-    let status = execute_command(command)?;
+    let status = executor.execute(command)?;
 
     if status.success() {
         // Checking if the command was successful
@@ -106,6 +136,22 @@ mod tests {
     use serial_test::serial;
     // Importing serial_test crate for running tests serially for command execution tests
 
+    #[cfg(unix)]
+    struct FakeExecutor {
+        status_code: i32,
+        commands: Vec<String>,
+    }
+
+    #[cfg(unix)]
+    impl CommandExecutor for FakeExecutor {
+        fn execute(&mut self, command: &str) -> anyhow::Result<ExitStatus> {
+            use std::os::unix::process::ExitStatusExt;
+
+            self.commands.push(command.to_string());
+            Ok(ExitStatus::from_raw(self.status_code << 8))
+        }
+    }
+
     #[test]
     #[serial]
     fn test_run_command_success() {
@@ -118,6 +164,20 @@ mod tests {
     fn test_run_command_failure() {
         let status = run_command("non_existent_command_hopefully").expect("shell should run");
         assert!(!status.success());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_run_command_with_uses_injected_executor() {
+        let mut executor = FakeExecutor {
+            status_code: 0,
+            commands: Vec::new(),
+        };
+
+        let status = run_command_with("echo fake", &mut executor).expect("command should run");
+
+        assert!(status.success());
+        assert_eq!(executor.commands, vec!["echo fake"]);
     }
 
     #[tokio::test]

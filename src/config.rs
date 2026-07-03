@@ -2,8 +2,10 @@ use anyhow::Context; // Importing context from the anyhow crate
 use directories::BaseDirs;
 use inquire::{Select, Text};
 use serde::{Deserialize, Serialize}; // For serializing/deserializing config
+use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process;
 
 // Define the Config struct with multiple sections
 #[derive(Debug, Serialize, Deserialize, Clone, Default, PartialEq, Eq)]
@@ -35,6 +37,16 @@ pub fn get_config_file_path() -> Result<PathBuf, String> {
     // Get the config directory and append the file name
     let config_file = base_dirs.config_dir().join("cli_menu_cmd.json");
 
+    ensure_config_file_path(config_file)
+}
+
+/// Returns the supplied config file path, creating a default config when missing.
+///
+/// # Errors
+///
+/// Returns an error when an existing config cannot be loaded or a default
+/// config cannot be created.
+pub fn ensure_config_file_path(config_file: PathBuf) -> Result<PathBuf, String> {
     if config_file.exists() {
         // Load the config for validation
         let config = crate::config::load_config(&config_file)
@@ -46,6 +58,11 @@ pub fn get_config_file_path() -> Result<PathBuf, String> {
                 "✅  Config file loaded successfully from path: {}",
                 config_file.display()
             );
+        } else if let Err(errors) = validate_config(&config) {
+            println!("⚠️  Config loaded with validation warnings:");
+            for error in errors {
+                println!("  - {error}");
+            }
         }
     } else {
         println!(
@@ -79,9 +96,39 @@ pub fn load_config(path: &Path) -> anyhow::Result<Config> {
 /// Returns an error when the config cannot be serialized or written to disk.
 pub fn save_config(path: &Path, config: &Config) -> anyhow::Result<()> {
     let config_data = serde_json::to_string_pretty(config).context("failed to serialize config")?;
-    fs::write(path, config_data)
-        .with_context(|| format!("unable to write config file at {}", path.display()))?;
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).with_context(|| {
+            format!(
+                "unable to create config directory located at {}",
+                parent.display()
+            )
+        })?;
+    }
+
+    let temp_path = temp_config_path(path);
+    fs::write(&temp_path, config_data).with_context(|| {
+        format!(
+            "unable to write temporary config file at {}",
+            temp_path.display()
+        )
+    })?;
+    fs::rename(&temp_path, path).with_context(|| {
+        let _ = fs::remove_file(&temp_path);
+        format!(
+            "unable to move temporary config file from {} to {}",
+            temp_path.display(),
+            path.display()
+        )
+    })?;
     Ok(())
+}
+
+fn temp_config_path(path: &Path) -> PathBuf {
+    let file_name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("cli_menu_cmd.json");
+    path.with_file_name(format!(".{file_name}.{}.tmp", process::id()))
 }
 
 // Saves a default config.
@@ -103,14 +150,59 @@ fn create_default_config(path: &Path) -> anyhow::Result<Config> {
 // Function to validate JSON config file
 #[must_use]
 pub fn validate_json(config: &Config) -> bool {
-    serde_json::to_string(config).is_ok()
+    serde_json::to_string(config).is_ok() && validate_config(config).is_ok()
+}
+
+/// Validates config values that can deserialize but would behave poorly at runtime.
+///
+/// # Errors
+///
+/// Returns all detected validation errors so the caller can show a useful list.
+pub fn validate_config(config: &Config) -> Result<(), Vec<String>> {
+    let mut errors = Vec::new();
+    let mut display_names = HashSet::new();
+
+    for (index, command) in config.commands.iter().enumerate() {
+        let position = index + 1;
+        let display_name = command.display_name.trim();
+
+        if display_name.is_empty() {
+            errors.push(format!("Command {position} has an empty display name."));
+        } else if !display_names.insert(display_name.to_ascii_lowercase()) {
+            errors.push(format!("Duplicate display name: '{display_name}'."));
+        }
+
+        if command.command.trim().is_empty() {
+            errors.push(format!("Command {position} has an empty shell command."));
+        }
+    }
+
+    if let Some(sound_path) = &config.cmd_sound
+        && !sound_path.exists()
+    {
+        errors.push(format!(
+            "Sound file does not exist: {}.",
+            sound_path.display()
+        ));
+    }
+
+    if config.window_title_support
+        && config
+            .window_title
+            .as_ref()
+            .is_some_and(|title| title.trim().is_empty())
+    {
+        errors.push("Window title cannot be only whitespace.".to_string());
+    }
+
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(errors)
+    }
 }
 
 /// Prompts the user to edit the `cmd_sound` path.
-///
-/// # Panics
-///
-/// Panics if the interactive prompt cannot read input.
 pub fn edit_cmd_sound(config: &mut Config, changes_made: &mut bool) {
     let current_sound = config
         .cmd_sound
@@ -119,10 +211,17 @@ pub fn edit_cmd_sound(config: &mut Config, changes_made: &mut bool) {
 
     println!("Current sound file: {current_sound}");
 
-    let sound_path = Text::new("Enter the new path for cmd_sound (leave empty to clear):")
+    let original_sound = config.cmd_sound.clone();
+    let sound_path = match Text::new("Enter the new path for cmd_sound (leave empty to clear):")
         .with_initial_value(&current_sound)
         .prompt()
-        .expect("Failed to read input");
+    {
+        Ok(sound_path) => sound_path,
+        Err(e) => {
+            eprintln!("❌ Failed to read input: {e}");
+            return;
+        }
+    };
 
     if sound_path.is_empty() {
         config.cmd_sound = None; // Clear the cmd_sound path
@@ -130,24 +229,26 @@ pub fn edit_cmd_sound(config: &mut Config, changes_made: &mut bool) {
     } else {
         let sound_path = sound_path.trim();
         config.cmd_sound = Some(PathBuf::from(sound_path));
-        println!(
-            "✅ cmd_sound updated to: {}",
-            config.cmd_sound.as_ref().unwrap().display()
-        );
+        if let Some(cmd_sound) = &config.cmd_sound {
+            println!("✅ cmd_sound updated to: {}", cmd_sound.display());
+        }
     }
 
-    *changes_made = true; // Mark changes as made
+    if config.cmd_sound != original_sound {
+        *changes_made = true; // Mark changes as made
+    }
 }
 
 /// Prompts the user to edit the window title settings.
-///
-/// # Panics
-///
-/// Panics if an interactive prompt cannot read input.
 pub fn edit_window_title(config: &mut Config, changes_made: &mut bool) {
-    let enable_title_support = Select::new("Enable window title support?", vec!["Yes", "No"])
-        .prompt()
-        .expect("Failed to read input");
+    let enable_title_support =
+        match Select::new("Enable window title support?", vec!["Yes", "No"]).prompt() {
+            Ok(value) => value,
+            Err(e) => {
+                eprintln!("❌ Failed to read input: {e}");
+                return;
+            }
+        };
 
     if enable_title_support == "Yes" {
         println!("✅ Window title support enabled.");
@@ -164,10 +265,16 @@ pub fn edit_window_title(config: &mut Config, changes_made: &mut bool) {
 
     println!("Current window title: {current_title}");
 
-    let new_title = Text::new("Enter the new window title (leave empty to clear):")
+    let new_title = match Text::new("Enter the new window title (leave empty to clear):")
         .with_initial_value(&current_title)
         .prompt()
-        .expect("Failed to read input");
+    {
+        Ok(title) => title,
+        Err(e) => {
+            eprintln!("❌ Failed to read input: {e}");
+            return;
+        }
+    };
 
     apply_window_title_settings(config, true, Some(&new_title), changes_made);
 
@@ -261,6 +368,42 @@ mod tests {
     fn test_validate_json_returns_true_for_valid_config() {
         let config = Config::default();
         assert!(validate_json(&config));
+    }
+
+    #[test]
+    fn test_validate_config_rejects_empty_and_duplicate_commands() {
+        let config = Config {
+            commands: vec![
+                CommandOption {
+                    display_name: "List".into(),
+                    command: "ls".into(),
+                },
+                CommandOption {
+                    display_name: "list".into(),
+                    command: " ".into(),
+                },
+                CommandOption {
+                    display_name: " ".into(),
+                    command: "date".into(),
+                },
+            ],
+            ..Default::default()
+        };
+
+        let errors = validate_config(&config).expect_err("config should be invalid");
+
+        assert_eq!(errors.len(), 3);
+        assert!(errors.iter().any(|error| error.contains("Duplicate")));
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.contains("empty shell command"))
+        );
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.contains("empty display name"))
+        );
     }
 
     #[test]
