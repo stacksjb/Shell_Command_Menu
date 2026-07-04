@@ -1,5 +1,9 @@
 # Changelog
 
+07/3/26 - v0.3.1
+Added export and config paths
+Added config validation and command execution tests
+
 5/4/26 - v0.3.0
 Code update with signficant refactor based on latest review
 
